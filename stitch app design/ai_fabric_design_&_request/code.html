@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Fabric Design &amp; Request</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#12aee2",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#101d22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-white font-display min-h-screen">
+<div class="max-w-md mx-auto relative flex flex-col pb-32">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md flex items-center p-4 justify-between border-b border-white/5">
+<div class="text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-white/10 cursor-pointer">
+<span class="material-symbols-outlined">arrow_back_ios_new</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Design Studio</h2>
+<div class="flex size-10 items-center justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-transparent text-white hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined">history</span>
+</button>
+</div>
+</header>
+<main class="flex flex-col gap-2">
+<!-- AI Fabric Prompt Section -->
+<div class="px-4 pt-6">
+<div class="flex flex-col gap-4">
+<label class="flex flex-col w-full">
+<p class="text-white text-sm font-semibold uppercase tracking-wider pb-3 opacity-70">Describe your dream fabric</p>
+<textarea class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-white/10 bg-white/5 placeholder:text-white/30 p-4 text-base font-normal leading-relaxed min-h-[120px]" placeholder="e.g., Iridescent silk with floating gold geometric patterns and a soft velvet finish"></textarea>
+</label>
+</div>
+</div>
+<!-- AI Generate Button -->
+<div class="px-4 py-2">
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-primary text-background-dark gap-3 text-base font-bold transition-transform active:scale-95 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span>AI Generate Design</span>
+</button>
+</div>
+<!-- Design Preview Header -->
+<div class="px-4 pt-4">
+<h3 class="text-white text-xl font-bold tracking-tight">Design Preview</h3>
+</div>
+<!-- Card: 3D Render View -->
+<div class="px-4 py-2 @container">
+<div class="flex flex-col items-stretch justify-start rounded-xl shadow-2xl bg-white/5 border border-white/5 overflow-hidden">
+<div class="relative w-full aspect-square bg-center bg-no-repeat bg-cover group" data-alt="3D render of high-fidelity luxury fabric texture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCBnbF0z-rgjN4_sdc-uGQZ8OgTVSSIhSBk9O23XZwnVJV0xLLSKqiK0Ndxo7fgB-xVv0AdxQs9jjNR0ik9cXsX54jrSyjGjq7sBYcuR30_4sMtJds7oUncMwmnTpeCpRGpxSoQ2KQZOvAWCuS6KKwGDrLc3J1wO-lUvT8Kfl96TfZdL8_SQrXR3N91bIAYmk1-xNz3p_JHjSZYtWVsn4A05yG2phmNmWPT5dWsaum6BW6qZWjdWFWGnMciftH5YetotykkBP3Rb3lM");'>
+<!-- Overlay controls -->
+<div class="absolute bottom-4 right-4 flex gap-2">
+<button class="bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-primary/80 transition-colors">
+<span class="material-symbols-outlined">3d_rotation</span>
+</button>
+<button class="bg-black/50 backdrop-blur-md text-white p-2 rounded-full hover:bg-primary/80 transition-colors">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+</div>
+</div>
+<div class="flex w-full flex-col gap-1 p-4">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-white text-lg font-bold">3D High-Fidelity Render</p>
+<p class="text-white/50 text-sm">Interactive visualization engine</p>
+</div>
+<span class="material-symbols-outlined text-primary">verified</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Specifications Form -->
+<div class="px-4 py-4 space-y-6">
+<h3 class="text-white text-lg font-bold border-b border-white/5 pb-2">Technical Specifications</h3>
+<div class="grid grid-cols-2 gap-4">
+<!-- Quantity Input -->
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-white/70">Quantity (Yards)</span>
+<div class="relative">
+<input class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none" type="number" value="50"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-xs">YD</span>
+</div>
+</label>
+<!-- Color Hex/Pick -->
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-white/70">Color Hex/Pick</span>
+<div class="flex gap-2">
+<div class="w-12 h-12 rounded-lg bg-[#12aee2] border border-white/20 shrink-0 cursor-pointer"></div>
+<input class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-3 text-white font-mono text-sm uppercase outline-none" type="text" value="#12AEE2"/>
+</div>
+</label>
+</div>
+<!-- Thread Type Selection -->
+<div class="flex flex-col gap-2">
+<span class="text-sm font-medium text-white/70">Thread Type</span>
+<div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-primary text-background-dark font-bold text-sm">Pure Silk</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white/5 text-white border border-white/10 font-medium text-sm">Pima Cotton</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white/5 text-white border border-white/10 font-medium text-sm">Synthetic Blend</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white/5 text-white border border-white/10 font-medium text-sm">Linen</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button Area -->
+<div class="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-dark via-background-dark to-transparent pt-12">
+<div class="max-w-md mx-auto">
+<button class="flex w-full items-center justify-center gap-3 bg-white text-background-dark rounded-full h-16 shadow-2xl shadow-white/5 font-bold text-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined">factory</span>
+                    Find Best Vendors
+                </button>
+<!-- Home Indicator (iOS style) -->
+<div class="w-32 h-1.5 bg-white/20 rounded-full mx-auto mt-6"></div>
+</div>
+</div>
+</div>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body></html>

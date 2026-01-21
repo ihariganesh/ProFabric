@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vendor Production Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#12aee2",
+                "background-light": "#f6f8f8",
+                "background-dark": "#101d22",
+              },
+              fontFamily: {
+                "display": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col max-w-[480px] mx-auto shadow-2xl">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
+<div class="flex items-center p-4 pb-2 justify-between">
+<div class="flex size-10 shrink-0 items-center">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/20" data-alt="User profile picture with professional attire" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA9V6KrPnv-_a1Wfeuw5wYOrjtLrgKGDpQUGi3L5SnUSwO4azvxfQTxXX_DbP0UlPSqKd1YNTDD4VE25YF0ZZekTxA7N3wLt_MSZWXTIc9069F0_PCK7YrIhJ8rgGbyRfciggiW-tF449b3VeWiXF9wMtGrpiqlqpHdvBDbWIZsNfQfVdKeHOcmO7Vnm6vkf7kkwDoCWgOCAJnkPz4z9qBeToVq0IHc8bHSHPVtRtpz2LtCwn53o6IXUbEwslc87bsnnFIB-TQZT59p");'>
+</div>
+</div>
+<div class="flex-1 px-4">
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Active Jobs</h2>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Unit 4 • North Wing</p>
+</div>
+<div class="flex gap-2 items-center">
+<button class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-white relative">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-white">
+<span class="material-symbols-outlined text-[24px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Tabs Component -->
+<div class="mt-2">
+<div class="flex border-b border-slate-200 dark:border-slate-800 px-4 gap-6">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-3 pt-4" href="#">
+<p class="text-sm font-bold leading-normal">All Jobs</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 dark:text-slate-400 pb-3 pt-4" href="#">
+<p class="text-sm font-bold leading-normal">In Progress</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 dark:text-slate-400 pb-3 pt-4" href="#">
+<p class="text-sm font-bold leading-normal">Urgent</p>
+</a>
+</div>
+</div>
+</header>
+<main class="flex-1 pb-32">
+<!-- SectionHeader -->
+<div class="flex justify-between items-center px-4 pt-6 pb-2">
+<h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Current Production</h3>
+<span class="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded">3 ACTIVE</span>
+</div>
+<!-- Card 1 -->
+<div class="px-4 py-3">
+<div class="flex flex-col gap-0 rounded-xl bg-white dark:bg-[#192d33] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="flex items-stretch justify-between gap-4 p-4">
+<div class="flex flex-[2_2_0px] flex-col justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="flex size-2 rounded-full bg-green-500"></span>
+<p class="text-slate-500 dark:text-[#92bbc9] text-[11px] font-bold uppercase tracking-widest">ID: #ORD-8821</p>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-bold leading-tight">Organic Cotton Mesh</p>
+<p class="text-slate-500 dark:text-[#92bbc9] text-sm font-medium">500m • <span class="text-red-500 dark:text-red-400">Due Today</span></p>
+</div>
+</div>
+<div class="w-24 h-20 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 border border-slate-100 dark:border-slate-700" data-alt="Detailed texture of organic white cotton mesh fabric" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHf2x0wpuB-aQfCMch9eQOLQy7uIHUnrZaPCKz5OqUbKRzcxamLdDycMv-gQmSkMxEhPnMgNsRKSz-bFUbx6irU5RgYI2MFU71HFLL8GD7JOMPMb0EaPHvJebEfxTTQO-P4FjByVtSjGIuiSyKuIYwaCqms2lMTDEPOGU_NJDjW0hIfGV21wO3t1JR8RV2iQWT8crI4Tx1pDYgKY9txvQ0ohnnCT92E2M127Vpr8UAKJEMMTWpq1jRWbwaKD3Xsh7_c97WPBcQNZEf");'>
+</div>
+</div>
+<!-- ProgressBar -->
+<div class="px-4 pb-4">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-end">
+<p class="text-slate-400 dark:text-slate-400 text-xs font-medium">Cutting &amp; Prep Phase</p>
+<p class="text-slate-900 dark:text-white text-xs font-bold">65%</p>
+</div>
+<div class="h-2 rounded-full bg-slate-100 dark:bg-[#325a67]">
+<div class="h-full rounded-full bg-primary" style="width: 65%;"></div>
+</div>
+</div>
+<button class="mt-4 w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary text-white gap-2 text-sm font-bold tracking-tight">
+<span class="material-symbols-outlined text-[18px]">update</span>
+<span>Update Status</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="px-4 py-3">
+<div class="flex flex-col gap-0 rounded-xl bg-white dark:bg-[#192d33] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="flex items-stretch justify-between gap-4 p-4">
+<div class="flex flex-[2_2_0px] flex-col justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="flex size-2 rounded-full bg-primary"></span>
+<p class="text-slate-500 dark:text-[#92bbc9] text-[11px] font-bold uppercase tracking-widest">ID: #ORD-9014</p>
+</div>
+<p class="text-slate-900 dark:text-white text-base font-bold leading-tight">Recycled Navy Polyester</p>
+<p class="text-slate-500 dark:text-[#92bbc9] text-sm font-medium">1,200m • Due Oct 28</p>
+</div>
+</div>
+<div class="w-24 h-20 bg-center bg-no-repeat bg-cover rounded-lg shrink-0 border border-slate-100 dark:border-slate-700" data-alt="Deep navy recycled polyester textile weave" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAkOYe551seQLPjFrMzkJAWCsOMwrBWHGJDm6C0g-gRUYlTXmQClIjnpkfqs86v0ofQzfdg28FvCgzY4zocAn-jDqjyUujlioEdHpHIJ3SmklEPsFuP1o9PjgSlmw4R_YG-wR9mgNa3szG9nZW1AZF8PqkCGGbRSy6tRMhJ5_uYXTYpe5n42OolQt7OgpCRohqG7KG61hw_CQwxj26gWAfc8WfwiCZJCQ1Xdr3C1h7DWnm0deIBpYZO93Ahu7Qr5hDoApIiMQrb6J5T");'>
+</div>
+</div>
+<div class="px-4 pb-4">
+<div class="flex items-center gap-2 mb-4 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<p class="text-[11px] text-slate-500 dark:text-slate-400">AI Design optimized for standard loom settings.</p>
+</div>
+<button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary/10 dark:bg-primary/20 text-primary border border-primary/30 gap-2 text-sm font-bold tracking-tight">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Accept Request</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Material Inventory Section -->
+<div class="mt-6">
+<div class="flex justify-between items-center px-4 pb-3">
+<h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Material Inventory</h3>
+<button class="text-primary text-xs font-bold flex items-center gap-1">
+                        View All <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+<div class="flex gap-4 overflow-x-auto px-4 pb-4 no-scrollbar">
+<!-- Stock Card 1 -->
+<div class="min-w-[160px] p-4 bg-white dark:bg-[#192d33] rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400">texture</span>
+</div>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400 uppercase">Stable</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold truncate">Cotton Thread</p>
+<p class="text-slate-500 dark:text-[#92bbc9] text-xs">Optic White</p>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-slate-400">STOCK</span>
+<span class="text-slate-900 dark:text-white">85%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-green-500" style="width: 85%;"></div>
+</div>
+</div>
+</div>
+<!-- Stock Card 2 (Low Stock) -->
+<div class="min-w-[160px] p-4 bg-white dark:bg-[#192d33] rounded-xl border-2 border-red-500/20 dark:border-red-500/30 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="size-10 rounded-lg bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 uppercase tracking-tighter">Low Stock</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold truncate">Poly Thread</p>
+<p class="text-slate-500 dark:text-[#92bbc9] text-xs">Jet Black</p>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-slate-400">STOCK</span>
+<span class="text-red-500">12%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-red-500" style="width: 12%;"></div>
+</div>
+</div>
+</div>
+<!-- Stock Card 3 -->
+<div class="min-w-[160px] p-4 bg-white dark:bg-[#192d33] rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400">palette</span>
+</div>
+<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 uppercase">Stock</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold truncate">Reactive Dye</p>
+<p class="text-slate-500 dark:text-[#92bbc9] text-xs">Indigo B-42</p>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-[10px] font-bold">
+<span class="text-slate-400">STOCK</span>
+<span class="text-slate-900 dark:text-white">48%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-blue-500" style="width: 48%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (iOS Style) -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white/80 dark:bg-background-dark/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around items-center pt-3 pb-8 px-6">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined fill-1">dashboard</span>
+<span class="text-[10px] font-bold">Jobs</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] font-bold">Inventory</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[10px] font-bold">Metrics</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</button>
+</nav>
+</div>
+</body></html>
