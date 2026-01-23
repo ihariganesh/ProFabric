@@ -44,6 +44,11 @@ dependencies:
   uuid: ^4.3.3
   logger: ^2.0.2+1
 
+  # Authentication
+  google_sign_in: ^6.2.1
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+
   # Image Processing
   image_picker: ^1.0.7
 

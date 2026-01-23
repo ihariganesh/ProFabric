@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../../../core/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -38,14 +40,32 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      if (authMode == 'signin') {
+        // Sign in with email and password
+        await _authService.signInWithEmailPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      } else {
+        // Sign up with email and password
+        await _authService.signUpWithEmailPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _nameController.text.trim(),
+        );
+      }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pushReplacementNamed('/home');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(e.toString());
+      }
     }
   }
 
@@ -54,15 +74,51 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate Google sign-in
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pushReplacementNamed('/home');
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      
+      if (userCredential != null && mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      } else {
+        // User canceled the sign-in
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorDialog(e.toString());
+      }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E2D33),
+        title: const Text(
+          'Authentication Error',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Color(0xFF12AEE2)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
