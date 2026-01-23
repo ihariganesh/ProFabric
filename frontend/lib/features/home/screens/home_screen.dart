@@ -7,7 +7,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
 
@@ -90,38 +91,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ],
                     ),
                   ),
-                  Stack(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E2D33),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_outlined,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          width: 8,
-                          height: 8,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/notifications');
+                    },
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: const Color(0xFF101D22),
-                              width: 2,
+                            color: const Color(0xFF1E2D33),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFF101D22),
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Container(
@@ -230,35 +236,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
         const SizedBox(height: 16),
-        _buildJobCard(
-          orderNumber: 'PO-2024-4312',
-          fabricType: 'Premium Cotton Blend',
-          quantity: '12,400 meters',
-          deadline: '2 days',
-          progress: 0.68,
-          status: 'Weaving',
-          statusColor: const Color(0xFF12AEE2),
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, '/order-tracking');
+          },
+          child: _buildJobCard(
+            orderNumber: 'PO-2024-4312',
+            fabricType: 'Premium Cotton Blend',
+            quantity: '12,400 meters',
+            deadline: '2 days',
+            progress: 0.68,
+            status: 'Weaving',
+            statusColor: const Color(0xFF12AEE2),
+          ),
         ),
         const SizedBox(height: 12),
-        _buildJobCard(
-          orderNumber: 'PO-2024-4298',
-          fabricType: 'Organic Linen Mix',
-          quantity: '8,600 meters',
-          deadline: '5 days',
-          progress: 0.42,
-          status: 'Dyeing',
-          statusColor: Colors.orange,
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, '/order-tracking');
+          },
+          child: _buildJobCard(
+            orderNumber: 'PO-2024-4298',
+            fabricType: 'Organic Linen Mix',
+            quantity: '8,600 meters',
+            deadline: '5 days',
+            progress: 0.42,
+            status: 'Dyeing',
+            statusColor: Colors.orange,
+          ),
         ),
         const SizedBox(height: 12),
-        _buildJobCard(
-          orderNumber: 'PO-2024-4275',
-          fabricType: 'Silk-Polyester Fusion',
-          quantity: '5,200 meters',
-          deadline: '1 day',
-          progress: 0.89,
-          status: 'Finishing',
-          statusColor: Colors.green,
-          isUrgent: true,
+        GestureDetector(
+          onTap: () {
+            Navigator.pushNamed(context, '/order-tracking');
+          },
+          child: _buildJobCard(
+            orderNumber: 'PO-2024-4275',
+            fabricType: 'Silk-Polyester Fusion',
+            quantity: '5,200 meters',
+            deadline: '1 day',
+            progress: 0.89,
+            status: 'Finishing',
+            statusColor: Colors.green,
+            isUrgent: true,
+          ),
         ),
       ],
     );

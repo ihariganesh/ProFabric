@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/ai_design/screens/ai_design_screen.dart';
+import '../../features/orders/screens/order_tracking_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 
 class AppRouter {
   // Route Names
@@ -12,6 +14,7 @@ class AppRouter {
   static const String aiDesign = '/ai-design';
   static const String orderDetails = '/order-details';
   static const String orderTracking = '/order-tracking';
+  static const String notifications = '/notifications';
   static const String vendorDashboard = '/vendor-dashboard';
   static const String checkout = '/checkout';
 
@@ -29,6 +32,12 @@ class AppRouter {
 
       case aiDesign:
         return MaterialPageRoute(builder: (_) => const AIDesignScreen());
+
+      case orderTracking:
+        return MaterialPageRoute(builder: (_) => const OrderTrackingScreen());
+
+      case notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
 
       default:
         return MaterialPageRoute(
