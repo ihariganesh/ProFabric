@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/home/screens/home_screen.dart';
+import '../../features/ai_design/screens/ai_design_screen.dart';
 
 class AppRouter {
   // Route Names
@@ -84,39 +87,6 @@ class _SplashScreenState extends State<SplashScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Login Screen - To be implemented')),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Home Screen - To be implemented')),
-    );
-  }
-}
-
-class AIDesignScreen extends StatelessWidget {
-  const AIDesignScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('AI Design Screen - To be implemented')),
     );
   }
 }
