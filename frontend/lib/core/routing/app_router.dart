@@ -11,37 +11,26 @@ class AppRouter {
   static const String orderTracking = '/order-tracking';
   static const String vendorDashboard = '/vendor-dashboard';
   static const String checkout = '/checkout';
-  
+
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
-        return MaterialPageRoute(
-          builder: (_) => const SplashScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+
       case login:
-        return MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+
       case home:
-        return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+
       case aiDesign:
-        return MaterialPageRoute(
-          builder: (_) => const AIDesignScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const AIDesignScreen());
+
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(
-              child: Text('Page not found'),
-            ),
-          ),
+          builder: (_) =>
+              const Scaffold(body: Center(child: Text('Page not found'))),
         );
     }
   }
@@ -50,7 +39,7 @@ class AppRouter {
 // Placeholder screens
 class SplashScreen extends StatelessWidget {
   const SplashScreen({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,10 +63,7 @@ class SplashScreen extends StatelessWidget {
             const SizedBox(height: 24),
             const Text(
               'FabricFlow',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -88,39 +74,33 @@ class SplashScreen extends StatelessWidget {
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Text('Login Screen - To be implemented'),
-      ),
+      body: Center(child: Text('Login Screen - To be implemented')),
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Text('Home Screen - To be implemented'),
-      ),
+      body: Center(child: Text('Home Screen - To be implemented')),
     );
   }
 }
 
 class AIDesignScreen extends StatelessWidget {
   const AIDesignScreen({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Text('AI Design Screen - To be implemented'),
-      ),
+      body: Center(child: Text('AI Design Screen - To be implemented')),
     );
   }
 }

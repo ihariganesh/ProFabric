@@ -6,18 +6,18 @@ class AppTheme {
   static const Color primary = Color(0xFF12AEE2);
   static const Color backgroundDark = Color(0xFF101D22);
   static const Color backgroundLight = Color(0xFFF6F8F8);
-  
+
   static const Color surfaceDark = Color(0xFF1A2A30);
   static const Color cardDark = Color(0xFF1E2D33);
-  
+
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFFB0B0B0);
   static const Color textHint = Color(0xFF707070);
-  
+
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFFA726);
   static const Color error = Color(0xFFEF5350);
-  
+
   // Dark Theme
   static ThemeData get darkTheme {
     return ThemeData.dark().copyWith(
@@ -27,10 +27,9 @@ class AppTheme {
         primary: primary,
         secondary: primary,
         surface: surfaceDark,
-        background: backgroundDark,
         error: error,
       ),
-      
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         backgroundColor: backgroundDark.withOpacity(0.8),
@@ -42,16 +41,14 @@ class AppTheme {
           color: textPrimary,
         ),
       ),
-      
+
       // Card Theme
       cardTheme: CardTheme(
         color: cardDark,
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      
+
       // Text Theme
       textTheme: TextTheme(
         displayLarge: GoogleFonts.inter(
@@ -90,36 +87,26 @@ class AppTheme {
           color: textSecondary,
         ),
       ),
-      
+
       // Input Decoration Theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.1),
-          ),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.1),
-          ),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(
-            color: primary,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: primary, width: 2),
         ),
-        hintStyle: GoogleFonts.inter(
-          color: textHint,
-          fontSize: 14,
-        ),
+        hintStyle: GoogleFonts.inter(color: textHint, fontSize: 14),
       ),
-      
+
       // Elevated Button Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -136,12 +123,9 @@ class AppTheme {
           ),
         ),
       ),
-      
+
       // Icon Theme
-      iconTheme: const IconThemeData(
-        color: textPrimary,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: textPrimary, size: 24),
     );
   }
 }

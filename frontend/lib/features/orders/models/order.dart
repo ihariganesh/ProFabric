@@ -40,8 +40,8 @@ class Order {
       threadCount: json['thread_count'] as int?,
       gsm: json['gsm'] as int?,
       status: json['status'] as String,
-      totalCost: json['total_cost'] != null 
-          ? (json['total_cost'] as num).toDouble() 
+      totalCost: json['total_cost'] != null
+          ? (json['total_cost'] as num).toDouble()
           : null,
       optimizationScore: json['optimization_score'] != null
           ? (json['optimization_score'] as num).toDouble()

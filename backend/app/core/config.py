@@ -11,13 +11,14 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # Database
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite:///./fabricflow.db"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_ENABLED: bool = False
     
     # JWT
-    SECRET_KEY: str
+    SECRET_KEY: str = "dev-secret-key-change-in-production-09876543210abcdef"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

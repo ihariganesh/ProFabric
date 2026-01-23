@@ -24,8 +24,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting FabricFlow API...")
     logger.info(f"Environment: {settings.DEBUG and 'Development' or 'Production'}")
     
-    # Create database tables
-    # Base.metadata.create_all(bind=engine)  # Use Alembic in production
+    # Create database tables for quick start
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables created")
     
     yield
     
