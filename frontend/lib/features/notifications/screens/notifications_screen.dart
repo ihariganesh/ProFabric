@@ -86,7 +86,8 @@ class NotificationsScreen extends StatelessWidget {
                     icon: Icons.local_shipping,
                     iconColor: const Color(0xFF12AEE2),
                     title: 'Order #FB-8921 En Route',
-                    subtitle: 'Your fabric shipment is 45% through production at Mill X',
+                    subtitle:
+                        'Your fabric shipment is 45% through production at Mill X',
                     time: '5 minutes ago',
                     isUnread: true,
                   ),
@@ -94,7 +95,8 @@ class NotificationsScreen extends StatelessWidget {
                     icon: Icons.inventory_2,
                     iconColor: Colors.orange,
                     title: 'Low Stock Alert',
-                    subtitle: 'Egyptian Cotton - Giza 45 inventory below threshold',
+                    subtitle:
+                        'Egyptian Cotton - Giza 45 inventory below threshold',
                     time: '1 hour ago',
                     isUnread: true,
                   ),
@@ -118,7 +120,8 @@ class NotificationsScreen extends StatelessWidget {
                     icon: Icons.chat_bubble,
                     iconColor: const Color(0xFF12AEE2),
                     title: 'New Message from Global Stitch',
-                    subtitle: 'Production timeline has been updated for your review',
+                    subtitle:
+                        'Production timeline has been updated for your review',
                     time: '8 hours ago',
                     isUnread: false,
                   ),
@@ -126,7 +129,8 @@ class NotificationsScreen extends StatelessWidget {
                     icon: Icons.local_offer,
                     iconColor: Colors.purple,
                     title: 'New Vendor Bid Received',
-                    subtitle: '3 vendors submitted bids for your fabric request',
+                    subtitle:
+                        '3 vendors submitted bids for your fabric request',
                     time: '1 day ago',
                     isUnread: false,
                   ),
@@ -156,9 +160,8 @@ class NotificationsScreen extends StatelessWidget {
             : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected
-              ? Colors.transparent
-              : Colors.white.withOpacity(0.1),
+          color:
+              isSelected ? Colors.transparent : Colors.white.withOpacity(0.1),
         ),
       ),
       child: Text(
@@ -222,7 +225,8 @@ class NotificationsScreen extends StatelessWidget {
                         title,
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
+                          fontWeight:
+                              isUnread ? FontWeight.bold : FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),

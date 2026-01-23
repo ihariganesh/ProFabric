@@ -9,8 +9,10 @@ class AIDesignScreen extends StatefulWidget {
 
 class _AIDesignScreenState extends State<AIDesignScreen> {
   final TextEditingController _promptController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController(text: '50');
-  final TextEditingController _colorController = TextEditingController(text: '#12AEE2');
+  final TextEditingController _quantityController =
+      TextEditingController(text: '50');
+  final TextEditingController _colorController =
+      TextEditingController(text: '#12AEE2');
   String _selectedThread = 'Pure Silk';
   bool _hasGenerated = false;
 
@@ -146,7 +148,8 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                               fontSize: 16,
                             ),
                             decoration: InputDecoration(
-                              hintText: 'e.g., Iridescent silk with floating gold geometric patterns and a soft velvet finish',
+                              hintText:
+                                  'e.g., Iridescent silk with floating gold geometric patterns and a soft velvet finish',
                               hintStyle: TextStyle(
                                 color: Colors.white.withOpacity(0.3),
                               ),
@@ -247,7 +250,8 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.black.withOpacity(0.5),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
                                         child: const Icon(
                                           Icons.threed_rotation,
@@ -261,7 +265,8 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                         height: 40,
                                         decoration: BoxDecoration(
                                           color: Colors.black.withOpacity(0.5),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
                                         child: const Icon(
                                           Icons.zoom_in,
@@ -280,7 +285,8 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                 children: [
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '3D High-Fidelity Render',
@@ -365,13 +371,16 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                       child: TextField(
                                         controller: _quantityController,
                                         keyboardType: TextInputType.number,
-                                        style: const TextStyle(color: Colors.white),
+                                        style: const TextStyle(
+                                            color: Colors.white),
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          contentPadding: const EdgeInsets.all(12),
+                                          contentPadding:
+                                              const EdgeInsets.all(12),
                                           suffixText: 'YD',
                                           suffixStyle: TextStyle(
-                                            color: Colors.white.withOpacity(0.3),
+                                            color:
+                                                Colors.white.withOpacity(0.3),
                                             fontSize: 12,
                                           ),
                                         ),
@@ -401,9 +410,11 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                           height: 48,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF12AEE2),
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                             border: Border.all(
-                                              color: Colors.white.withOpacity(0.2),
+                                              color:
+                                                  Colors.white.withOpacity(0.2),
                                             ),
                                           ),
                                         ),
@@ -411,10 +422,13 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                         Expanded(
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.05),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color: Colors.white
+                                                  .withOpacity(0.05),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                               border: Border.all(
-                                                color: Colors.white.withOpacity(0.1),
+                                                color: Colors.white
+                                                    .withOpacity(0.1),
                                               ),
                                             ),
                                             child: TextField(
@@ -426,7 +440,8 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                               ),
                                               decoration: const InputDecoration(
                                                 border: InputBorder.none,
-                                                contentPadding: EdgeInsets.all(12),
+                                                contentPadding:
+                                                    EdgeInsets.all(12),
                                               ),
                                             ),
                                           ),
@@ -552,10 +567,13 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF12AEE2) : Colors.white.withOpacity(0.05),
+          color: isSelected
+              ? const Color(0xFF12AEE2)
+              : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.1),
+            color:
+                isSelected ? Colors.transparent : Colors.white.withOpacity(0.1),
           ),
         ),
         child: Text(

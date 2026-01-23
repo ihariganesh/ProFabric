@@ -133,7 +133,8 @@ class OrderTrackingScreen extends StatelessWidget {
                               child: Column(
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         'IN PRODUCTION',
@@ -159,8 +160,10 @@ class OrderTrackingScreen extends StatelessWidget {
                                     child: LinearProgressIndicator(
                                       value: 0.45,
                                       minHeight: 6,
-                                      backgroundColor: Colors.white.withOpacity(0.1),
-                                      valueColor: const AlwaysStoppedAnimation<Color>(
+                                      backgroundColor:
+                                          Colors.white.withOpacity(0.1),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
                                         Color(0xFF12AEE2),
                                       ),
                                     ),
@@ -312,7 +315,9 @@ class OrderTrackingScreen extends StatelessWidget {
       children: [
         Icon(
           icon,
-          color: isActive ? const Color(0xFF12AEE2) : Colors.white.withOpacity(0.5),
+          color: isActive
+              ? const Color(0xFF12AEE2)
+              : Colors.white.withOpacity(0.5),
           size: 24,
         ),
         const SizedBox(height: 4),
@@ -320,7 +325,9 @@ class OrderTrackingScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: isActive ? const Color(0xFF12AEE2) : Colors.white.withOpacity(0.5),
+            color: isActive
+                ? const Color(0xFF12AEE2)
+                : Colors.white.withOpacity(0.5),
           ),
         ),
       ],
@@ -399,8 +406,11 @@ class OrderTrackingScreen extends StatelessWidget {
                             title,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
-                              color: isActive ? const Color(0xFF12AEE2) : Colors.white,
+                              fontWeight:
+                                  isActive ? FontWeight.bold : FontWeight.w600,
+                              color: isActive
+                                  ? const Color(0xFF12AEE2)
+                                  : Colors.white,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -416,7 +426,9 @@ class OrderTrackingScreen extends StatelessWidget {
                             time,
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isActive
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               color: isActive
                                   ? const Color(0xFF12AEE2)
                                   : Colors.white.withOpacity(0.4),
@@ -506,7 +518,7 @@ class MapRoutePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    
+
     // Draw curved route
     path.moveTo(size.width * 0.2, size.height * 0.7);
     path.quadraticBezierTo(
@@ -526,8 +538,8 @@ class MapRoutePainter extends CustomPainter {
     const dashWidth = 6;
     const dashSpace = 4;
     double distance = 0;
-    
-    for (PathMetric pathMetric in path.computeMetrics()) {
+
+    for (var pathMetric in path.computeMetrics()) {
       while (distance < pathMetric.length) {
         final start = pathMetric.getTangentForOffset(distance)!.position;
         distance += dashWidth;
