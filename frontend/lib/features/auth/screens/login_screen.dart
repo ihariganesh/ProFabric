@@ -1,9 +1,10 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 import '../../../core/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -41,6 +42,21 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      // Check if Firebase is supported on this platform
+      final bool isFirebaseSupported = !(!kIsWeb && Platform.isLinux);
+      
+      if (!isFirebaseSupported) {
+        // Bypass authentication on unsupported platforms (e.g., Linux)
+        if (kDebugMode) {
+          print('Bypassing authentication on unsupported platform');
+        }
+        // Navigate to home without authentication
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+        return;
+      }
+      
       if (authMode == 'signin') {
         // Sign in with email and password
         await _authService.signInWithEmailPassword(
@@ -75,8 +91,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final userCredential = await _authService.signInWithGoogle();
+      // Check if Firebase is supported on this platform
+      final bool isFirebaseSupported = !(!kIsWeb && Platform.isLinux);
       
+      if (!isFirebaseSupported) {
+        // Bypass authentication on unsupported platforms
+        if (kDebugMode) {
+          print('Google Sign In not supported on this platform, bypassing...');
+        }
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          // Navigate directly without showing error
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+        return;
+      }
+      
+      final userCredential = await _authService.signInWithGoogle();
+
       if (userCredential != null && mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
@@ -126,13 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF101D22),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF101D22),
-              const Color(0xFF0D1619),
+              Color(0xFF101D22),
+              Color(0xFF0D1619),
             ],
           ),
         ),
@@ -234,12 +268,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'CHOOSE YOUR ROLE',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF12AEE2),
+                          color: Color(0xFF12AEE2),
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -248,9 +282,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Expanded(
                             child: _RoleCard(
-                              icon: Icons.shopping_bag_outlined,
-                              title: 'I am a Buyer',
-                              subtitle: 'Design & Ordering',
+                              icon: Icons.store_outlined,
+                              title: 'Bulk Buyer',
+                              subtitle: 'AI Design & B2B',
                               isSelected: selectedRole == 'buyer',
                               onTap: () {
                                 setState(() {
@@ -259,16 +293,30 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: _RoleCard(
                               icon: Icons.factory_outlined,
-                              title: 'I am a Partner',
+                              title: 'Partner',
                               subtitle: 'Mills & Logistics',
                               isSelected: selectedRole == 'partner',
                               onTap: () {
                                 setState(() {
                                   selectedRole = 'partner';
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _RoleCard(
+                              icon: Icons.shopping_basket_outlined,
+                              title: 'Retail Buyer',
+                              subtitle: 'Browse & Shop',
+                              isSelected: selectedRole == 'retail',
+                              onTap: () {
+                                setState(() {
+                                  selectedRole = 'retail';
                                 });
                               },
                             ),
@@ -357,7 +405,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\$')
+                                                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                                 .hasMatch(value)) {
                               return 'Please enter a valid email';
                             }
@@ -572,11 +620,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () {
                                 // Handle forgot password
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
+                                  const SnackBar(
+                                    content: Text(
                                       'Password reset link sent to your email',
                                     ),
-                                    backgroundColor: const Color(0xFF12AEE2),
+                                    backgroundColor: Color(0xFF12AEE2),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -730,8 +778,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextButton(
                               onPressed: () {
                                 setState(() {
-                                  authMode =
-                                      authMode == 'signin' ? 'signup' : 'signin';
+                                  authMode = authMode == 'signin'
+                                      ? 'signup'
+                                      : 'signin';
                                   _formKey.currentState?.reset();
                                 });
                               },
@@ -839,12 +888,12 @@ class _RoleCard extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Positioned(
+              const Positioned(
                 top: 12,
                 right: 12,
                 child: Icon(
                   Icons.check_circle,
-                  color: const Color(0xFF12AEE2),
+                  color: Color(0xFF12AEE2),
                   size: 20,
                 ),
               ),

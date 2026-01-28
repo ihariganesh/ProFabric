@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -142,6 +142,52 @@ class _HomeScreenState extends State<HomeScreen>
                       color: Colors.white,
                       size: 20,
                     ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Quick Actions
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Quick Actions',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _QuickActionButton(
+                          icon: Icons.store,
+                          label: 'Marketplace',
+                          onTap: () => Navigator.pushNamed(context, '/marketplace'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _QuickActionButton(
+                          icon: Icons.inventory,
+                          label: 'My Inventory',
+                          onTap: () => Navigator.pushNamed(context, '/my-inventory'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _QuickActionButton(
+                          icon: Icons.gavel,
+                          label: 'Orders',
+                          onTap: () => Navigator.pushNamed(context, '/vendor-bidding'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -477,6 +523,54 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF12AEE2),
+              size: 24,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

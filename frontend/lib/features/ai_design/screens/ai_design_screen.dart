@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AIDesignScreen extends StatefulWidget {
-  const AIDesignScreen({Key? key}) : super(key: key);
+  const AIDesignScreen({super.key});
 
   @override
   State<AIDesignScreen> createState() => _AIDesignScreenState();
@@ -196,9 +196,9 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
 
                   if (_hasGenerated) ...[
                     // Design Preview Header
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                      child: const Text(
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 24, 16, 12),
+                      child: Text(
                         'Design Preview',
                         style: TextStyle(
                           fontSize: 20,
@@ -226,12 +226,12 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                 AspectRatio(
                                   aspectRatio: 1,
                                   child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.only(
+                                    decoration: const BoxDecoration(
+                                      borderRadius: BorderRadius.only(
                                         topLeft: Radius.circular(16),
                                         topRight: Radius.circular(16),
                                       ),
-                                      image: const DecorationImage(
+                                      image: DecorationImage(
                                         image: NetworkImage(
                                           'https://lh3.googleusercontent.com/aida-public/AB6AXuCBnbF0z-rgjN4_sdc-uGQZ8OgTVSSIhSBk9O23XZwnVJV0xLLSKqiK0Ndxo7fgB-xVv0AdxQs9jjNR0ik9cXsX54jrSyjGjq7sBYcuR30_4sMtJds7oUncMwmnTpeCpRGpxSoQ2KQZOvAWCuS6KKwGDrLc3J1wO-lUvT8Kfl96TfZdL8_SQrXR3N91bIAYmk1-xNz3p_JHjSZYtWVsn4A05yG2phmNmWPT5dWsaum6BW6qZWjdWFWGnMciftH5YetotykkBP3Rb3lM',
                                         ),
@@ -279,11 +279,11 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                 ),
                               ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.all(16),
+                            const Padding(
+                              padding: EdgeInsets.all(16),
                               child: Row(
                                 children: [
-                                  const Expanded(
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -307,7 +307,7 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                                       ],
                                     ),
                                   ),
-                                  const Icon(
+                                  Icon(
                                     Icons.verified,
                                     color: Color(0xFF12AEE2),
                                     size: 24,

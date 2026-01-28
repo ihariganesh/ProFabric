@@ -4,9 +4,9 @@ class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
 
   const OrderTrackingScreen({
-    Key? key,
+    super.key,
     this.orderId = 'FB-8921',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +74,13 @@ class OrderTrackingScreen extends StatelessWidget {
                         children: [
                           // Map Background
                           Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  const Color(0xFF0D1619),
-                                  const Color(0xFF101D22),
+                                  Color(0xFF0D1619),
+                                  Color(0xFF101D22),
                                 ],
                               ),
                             ),
@@ -97,13 +97,13 @@ class OrderTrackingScreen extends StatelessWidget {
                             right: 0,
                             height: 100,
                             child: Container(
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 gradient: LinearGradient(
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
                                     Colors.transparent,
-                                    const Color(0xFF101D22),
+                                    Color(0xFF101D22),
                                   ],
                                 ),
                               ),
@@ -136,12 +136,12 @@ class OrderTrackingScreen extends StatelessWidget {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
+                                      const Text(
                                         'IN PRODUCTION',
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF12AEE2),
+                                          color: Color(0xFF12AEE2),
                                           letterSpacing: 1.5,
                                         ),
                                       ),
