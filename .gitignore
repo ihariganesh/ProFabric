@@ -10,7 +10,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Note: lib/ is intentionally NOT ignored because Flutter uses lib/ for source code
+# lib/
 lib64/
 parts/
 sdist/
