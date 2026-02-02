@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   String selectedRole = 'buyer';
+  String? selectedSubRole; // For Supply Partner sub-role selection
   String authMode = 'signin'; // 'signin' or 'signup'
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -23,6 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   final _authService = AuthService();
+
+  // Supply Partner sub-roles mapping to backend roles
+  static const Map<String, String> supplyPartnerSubRoles = {
+    'yarn': 'Yarn Manufacturer',
+    'weaver': 'Weaver',
+    'fabric': 'Fabric Seller',
+    'printing': 'Printing Unit',
+    'stitching': 'Stitching Unit',
+    'logistics': 'Logistics Provider',
+  };
 
   @override
   void dispose() {
@@ -198,6 +209,161 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showSupplyPartnerDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1E2D33),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Select Your Role',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Choose your specific function in the supply chain',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Raw Materials Section
+            _buildSubRoleSection(
+              'RAW MATERIALS',
+              Icons.inventory_2_outlined,
+              [
+                _SubRoleOption('yarn', 'Yarn Manufacturer', 'Produce & sell yarn'),
+                _SubRoleOption('weaver', 'Weaver', 'Produce fabric from yarn'),
+                _SubRoleOption('fabric', 'Fabric Seller', 'Sell fabric to textiles'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Processing Section
+            _buildSubRoleSection(
+              'PROCESSING',
+              Icons.precision_manufacturing_outlined,
+              [
+                _SubRoleOption('printing', 'Printing Unit', 'Fabric printing & dyeing'),
+                _SubRoleOption('stitching', 'Stitching Unit', 'Stitch & package products'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Logistics Section
+            _buildSubRoleSection(
+              'LOGISTICS',
+              Icons.local_shipping_outlined,
+              [
+                _SubRoleOption('logistics', 'Logistics Provider', 'Transport & delivery'),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubRoleSection(String title, IconData sectionIcon, List<_SubRoleOption> options) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(sectionIcon, color: const Color(0xFF12AEE2), size: 16),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF12AEE2),
+                letterSpacing: 1,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((option) => _buildSubRoleChip(option)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubRoleChip(_SubRoleOption option) {
+    final isSelected = selectedSubRole == option.id;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedSubRole = option.id;
+        });
+        Navigator.of(context).pop();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF12AEE2).withOpacity(0.2)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF12AEE2)
+                : Colors.white.withOpacity(0.1),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              option.title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? const Color(0xFF12AEE2) : Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              option.subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -312,7 +478,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'CHOOSE YOUR ROLE',
+                        'CHOOSE YOUR PORTAL',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -321,17 +487,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+                      // First row - Buyer & Textile Hub
                       Row(
                         children: [
                           Expanded(
                             child: _RoleCard(
-                              icon: Icons.store_outlined,
-                              title: 'Bulk Buyer',
-                              subtitle: 'AI Design & B2B',
+                              icon: Icons.shopping_bag_outlined,
+                              title: 'Buyer',
+                              subtitle: 'Retail & Wholesale',
                               isSelected: selectedRole == 'buyer',
                               onTap: () {
                                 setState(() {
                                   selectedRole = 'buyer';
+                                  selectedSubRole = null;
                                 });
                               },
                             ),
@@ -339,33 +507,98 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _RoleCard(
-                              icon: Icons.factory_outlined,
-                              title: 'Partner',
-                              subtitle: 'Mills & Logistics',
-                              isSelected: selectedRole == 'partner',
+                              icon: Icons.hub_outlined,
+                              title: 'Textile Hub',
+                              subtitle: 'Orchestrator',
+                              isSelected: selectedRole == 'textile',
                               onTap: () {
                                 setState(() {
-                                  selectedRole = 'partner';
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _RoleCard(
-                              icon: Icons.shopping_basket_outlined,
-                              title: 'Retail Buyer',
-                              subtitle: 'Browse & Shop',
-                              isSelected: selectedRole == 'retail',
-                              onTap: () {
-                                setState(() {
-                                  selectedRole = 'retail';
+                                  selectedRole = 'textile';
+                                  selectedSubRole = null;
                                 });
                               },
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      // Second row - Supply Partner & Admin
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _RoleCard(
+                              icon: Icons.handshake_outlined,
+                              title: 'Supply Partner',
+                              subtitle: 'Mills & Logistics',
+                              isSelected: selectedRole == 'supply_partner',
+                              onTap: () {
+                                setState(() {
+                                  selectedRole = 'supply_partner';
+                                });
+                                _showSupplyPartnerDialog();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _RoleCard(
+                              icon: Icons.admin_panel_settings_outlined,
+                              title: 'Admin',
+                              subtitle: 'Platform Mgmt',
+                              isSelected: selectedRole == 'admin',
+                              onTap: () {
+                                setState(() {
+                                  selectedRole = 'admin';
+                                  selectedSubRole = null;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Show selected sub-role if Supply Partner
+                      if (selectedRole == 'supply_partner' && selectedSubRole != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF12AEE2).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFF12AEE2).withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF12AEE2),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Selected: ${supplyPartnerSubRoles[selectedSubRole]}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: _showSupplyPartnerDialog,
+                                  child: Text(
+                                    'Change',
+                                    style: TextStyle(
+                                      color: const Color(0xFF12AEE2).withOpacity(0.8),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -950,4 +1183,12 @@ class _RoleCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SubRoleOption {
+  final String id;
+  final String title;
+  final String subtitle;
+
+  _SubRoleOption(this.id, this.title, this.subtitle);
 }

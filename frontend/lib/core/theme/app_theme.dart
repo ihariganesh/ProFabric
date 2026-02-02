@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Colors matching the UI design
@@ -31,11 +30,11 @@ class AppTheme {
       ),
 
       // AppBar Theme
-      appBarTheme: AppBarTheme(
-        backgroundColor: backgroundDark.withOpacity(0.8),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xCC101D22), // backgroundDark.withOpacity(0.8)
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
@@ -50,38 +49,38 @@ class AppTheme {
       ),
 
       // Text Theme
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.inter(
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
-        displayMedium: GoogleFonts.inter(
+        displayMedium: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimary,
         ),
-        displaySmall: GoogleFonts.inter(
+        displaySmall: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        headlineMedium: GoogleFonts.inter(
+        headlineMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textPrimary,
         ),
-        bodySmall: GoogleFonts.inter(
+        bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textSecondary,
@@ -104,7 +103,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primary, width: 2),
         ),
-        hintStyle: GoogleFonts.inter(color: textHint, fontSize: 14),
+        hintStyle: const TextStyle(color: textHint, fontSize: 14),
       ),
 
       // Elevated Button Theme
@@ -117,7 +116,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
