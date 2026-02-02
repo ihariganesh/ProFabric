@@ -114,6 +114,15 @@ class AuthService {
       if (kDebugMode) {
         print('Google Sign In error: $e');
       }
+      // Check for common Google Sign-In errors
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('apiexception: 10')) {
+        throw 'Google Sign-In configuration error. Check SHA-1 fingerprint in Firebase Console.';
+      } else if (errorStr.contains('apiexception: 12500')) {
+        throw 'Google Play Services update required.';
+      } else if (errorStr.contains('api key not valid') || errorStr.contains('internal error')) {
+        throw 'An internal error has occurred. [ API key not valid. Please pass a valid API key.';
+      }
       throw 'Failed to sign in with Google. Please try again.';
     }
   }

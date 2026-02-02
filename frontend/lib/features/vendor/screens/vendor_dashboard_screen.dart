@@ -446,7 +446,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen>
                     color: Colors.white.withOpacity(0.7), fontSize: 12),
               ),
               const Spacer(),
-              Icon(Icons.timer_outlined, color: Colors.orange, size: 14),
+              const Icon(Icons.timer_outlined, color: Colors.orange, size: 14),
               const SizedBox(width: 4),
               Text(
                 deadline,

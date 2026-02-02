@@ -1,3 +1,4 @@
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -130,26 +131,68 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showErrorDialog(String message) {
+    // Check if it's a Firebase configuration error
+    final isConfigError = message.contains('API key not valid') ||
+        message.contains('CONFIGURATION_NOT_FOUND') ||
+        message.contains('internal error');
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E2D33),
-        title: const Text(
-          'Authentication Error',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          isConfigError ? 'Firebase Not Configured' : 'Authentication Error',
+          style: const TextStyle(color: Colors.white),
         ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.white70),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isConfigError 
+                  ? 'Firebase is not configured. Would you like to continue in demo mode?'
+                  : message,
+              style: const TextStyle(color: Colors.white70),
+            ),
+            if (isConfigError) ...[
+              const SizedBox(height: 12),
+              Text(
+                'See GOOGLE_SIGNIN_SETUP.md for setup instructions.',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.5),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text(
-              'OK',
-              style: TextStyle(color: Color(0xFF12AEE2)),
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
             ),
           ),
+          if (isConfigError)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacementNamed('/home');
+              },
+              child: const Text(
+                'Demo Mode',
+                style: TextStyle(color: Color(0xFF12AEE2)),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'OK',
+                style: TextStyle(color: Color(0xFF12AEE2)),
+              ),
+            ),
         ],
       ),
     );
@@ -829,7 +872,7 @@ class _RoleCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 160,
+        height: 130,
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF12AEE2).withOpacity(0.1)
@@ -845,15 +888,15 @@ class _RoleCard extends StatelessWidget {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: isSelected
                           ? const Color(0xFF12AEE2).withOpacity(0.2)
@@ -865,29 +908,29 @@ class _RoleCard extends StatelessWidget {
                       color: isSelected
                           ? const Color(0xFF12AEE2)
                           : Colors.white.withOpacity(0.6),
-                      size: 18,
+                      size: 16,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       color: Colors.white.withOpacity(0.4),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
                   ),
                 ],
               ),
