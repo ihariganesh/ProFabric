@@ -7,10 +7,32 @@ from app.core.database import Base
 
 
 class UserRole(str, enum.Enum):
+    """
+    9 Core User Roles for the Textile Supply Chain Platform
+    
+    1. BUYER - Retail & Wholesale buyers who place orders
+    2. TEXTILE - Orchestrator/Manufacturer who manages the entire production workflow
+    3. FABRIC_SELLER - Sells fabric to textiles or other parties
+    4. WEAVER - Produces fabric from yarn
+    5. YARN_MANUFACTURER - Produces and sells yarn
+    6. PRINTING_UNIT - Handles fabric printing/processing
+    7. STITCHING_UNIT - Handles stitching and packaging
+    8. LOGISTICS - Handles transportation and delivery
+    9. ADMIN - Platform administrator
+    """
     BUYER = "Buyer"
-    MATERIAL_VENDOR = "MaterialVendor"
-    FACTORY = "Factory"
+    TEXTILE = "Textile"  # Core Orchestrator Role
+    FABRIC_SELLER = "FabricSeller"
+    WEAVER = "Weaver"
+    YARN_MANUFACTURER = "YarnManufacturer"
+    PRINTING_UNIT = "PrintingUnit"
+    STITCHING_UNIT = "StitchingUnit"
     LOGISTICS = "Logistics"
+    ADMIN = "Admin"
+    
+    # Legacy aliases for backward compatibility
+    MATERIAL_VENDOR = "MaterialVendor"  # Deprecated: Use specific vendor types
+    FACTORY = "Factory"  # Deprecated: Use TEXTILE
 
 
 class User(Base):

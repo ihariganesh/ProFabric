@@ -152,7 +152,7 @@ class _VendorBiddingScreenState extends State<VendorBiddingScreen>
           type: 'Material Order',
           orderNumber: 'MAT${1000 + index}',
           requester: 'Premium Textiles Ltd.',
-          items: [
+          items: const [
             'Silk Thread - 50kg',
             'Cotton Thread - 30kg',
             'Polyester Blend - 20kg',
