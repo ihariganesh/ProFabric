@@ -12,6 +12,7 @@ import '../../features/textile/screens/textile_dashboard_screen.dart';
 import '../../features/vendor/screens/vendor_dashboard_screen.dart';
 import '../../features/buyer/screens/buyer_dashboard_screen.dart';
 import '../../features/payments/screens/payment_screen.dart';
+import '../../features/logistics/screens/logistics_dashboard_screen.dart';
 import '../constants/user_roles.dart';
 
 class AppRouter {
@@ -38,6 +39,7 @@ class AppRouter {
   static const String createOrder = '/create-order';
   static const String buyerDashboard = '/buyer-dashboard';
   static const String payment = '/payment';
+  static const String logisticsDashboard = '/logistics-dashboard';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -94,6 +96,15 @@ class AppRouter {
           builder: (_) => VendorDashboardScreen(
             userRole: UserRole.fromString(roleString),
             userName: args?['userName'] ?? 'Vendor User',
+            userEmail: args?['userEmail'] ?? '',
+          ),
+        );
+
+      case logisticsDashboard:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => LogisticsDashboardScreen(
+            userName: args?['userName'] ?? 'Logistics User',
             userEmail: args?['userEmail'] ?? '',
           ),
         );
@@ -163,12 +174,16 @@ class AppRouter {
         return const BuyerDashboardScreen();
       case UserRole.textile:
         return TextileDashboardScreen(userName: userName, userEmail: userEmail);
+      case UserRole.logistics:
+        return LogisticsDashboardScreen(
+          userName: userName,
+          userEmail: userEmail,
+        );
       case UserRole.fabricSeller:
       case UserRole.weaver:
       case UserRole.yarnManufacturer:
       case UserRole.printingUnit:
       case UserRole.stitchingUnit:
-      case UserRole.logistics:
         return VendorDashboardScreen(
           userRole: role,
           userName: userName,
