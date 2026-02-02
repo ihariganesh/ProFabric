@@ -3,12 +3,15 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/ai_design/screens/ai_design_screen.dart';
 import '../../features/orders/screens/order_tracking_screen.dart';
+import '../../features/orders/screens/create_order_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
 import '../../features/inventory/screens/my_inventory_screen.dart';
 import '../../features/vendor/screens/vendor_bidding_screen.dart';
 import '../../features/textile/screens/textile_dashboard_screen.dart';
 import '../../features/vendor/screens/vendor_dashboard_screen.dart';
+import '../../features/buyer/screens/buyer_dashboard_screen.dart';
+import '../../features/payments/screens/payment_screen.dart';
 import '../constants/user_roles.dart';
 
 class AppRouter {
@@ -32,6 +35,9 @@ class AppRouter {
   static const String vendorBidding = '/vendor-bidding';
   static const String sampleApproval = '/sample-approval';
   static const String chat = '/chat';
+  static const String createOrder = '/create-order';
+  static const String buyerDashboard = '/buyer-dashboard';
+  static const String payment = '/payment';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -45,6 +51,21 @@ class AppRouter {
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
 
+      case createOrder:
+        return MaterialPageRoute(builder: (_) => const CreateOrderScreen());
+
+      case buyerDashboard:
+        return MaterialPageRoute(builder: (_) => const BuyerDashboardScreen());
+
+      case payment:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentScreen(
+            orderId: args?['orderId'] ?? 'FB-0000',
+            totalAmount: (args?['totalAmount'] as num?)?.toDouble() ?? 125000.0,
+          ),
+        );
+
       case dashboard:
         // Role-based dashboard routing
         final args = settings.arguments as Map<String, dynamic>?;
@@ -52,7 +73,7 @@ class AppRouter {
         final userName = args?['userName'] as String? ?? 'User';
         final userEmail = args?['userEmail'] as String? ?? '';
         final role = UserRole.fromString(roleString);
-        
+
         return MaterialPageRoute(
           builder: (_) => _buildDashboardForRole(role, userName, userEmail),
         );
@@ -135,10 +156,11 @@ class AppRouter {
     }
   }
 
-  static Widget _buildDashboardForRole(UserRole role, String userName, String userEmail) {
+  static Widget _buildDashboardForRole(
+      UserRole role, String userName, String userEmail) {
     switch (role) {
       case UserRole.buyer:
-        return const HomeScreen();
+        return const BuyerDashboardScreen();
       case UserRole.textile:
         return TextileDashboardScreen(userName: userName, userEmail: userEmail);
       case UserRole.fabricSeller:
@@ -209,6 +231,7 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+
 // Admin Dashboard Placeholder
 class AdminDashboardPlaceholder extends StatelessWidget {
   const AdminDashboardPlaceholder({super.key});
@@ -229,7 +252,10 @@ class AdminDashboardPlaceholder extends StatelessWidget {
             SizedBox(height: 16),
             Text(
               'Admin Dashboard',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text('Coming Soon', style: TextStyle(color: Colors.white54)),
@@ -269,7 +295,10 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
             // Sample Images Section
             const Text(
               'Sample Images',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -289,7 +318,8 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.image, color: Colors.white54, size: 48),
+                        const Icon(Icons.image,
+                            color: Colors.white54, size: 48),
                         const SizedBox(height: 8),
                         Text(
                           'Sample ${index + 1}',
@@ -302,11 +332,14 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Sample Details
             const Text(
               'Sample Details',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Container(
@@ -326,11 +359,14 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Notes Section
             const Text(
               'Your Feedback',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -349,15 +385,17 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Action Buttons
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isApproving ? null : () => _rejectSample(context),
+                    onPressed:
+                        _isApproving ? null : () => _rejectSample(context),
                     icon: const Icon(Icons.close, color: Colors.red),
-                    label: const Text('Reject', style: TextStyle(color: Colors.red)),
+                    label: const Text('Reject',
+                        style: TextStyle(color: Colors.red)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(color: Colors.red),
@@ -367,15 +405,18 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _isApproving ? null : () => _approveSample(context),
+                    onPressed:
+                        _isApproving ? null : () => _approveSample(context),
                     icon: const Icon(Icons.check, color: Colors.white),
                     label: _isApproving
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Approve', style: TextStyle(color: Colors.white)),
+                        : const Text('Approve',
+                            style: TextStyle(color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -397,7 +438,9 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: Colors.white.withOpacity(0.6))),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -425,7 +468,8 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1E2D33),
-        title: const Text('Reject Sample?', style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Reject Sample?', style: TextStyle(color: Colors.white)),
         content: const Text(
           'A new sample will be produced based on your feedback.',
           style: TextStyle(color: Colors.white70),
@@ -441,7 +485,8 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Sample rejected. Textile will produce a new sample.'),
+                  content: Text(
+                      'Sample rejected. Textile will produce a new sample.'),
                   backgroundColor: Colors.orange,
                 ),
               );
@@ -475,10 +520,22 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [
-    {'text': 'Hi, I have a question about the order', 'isMe': true, 'time': '10:30 AM'},
+    {
+      'text': 'Hi, I have a question about the order',
+      'isMe': true,
+      'time': '10:30 AM'
+    },
     {'text': 'Sure, how can I help you?', 'isMe': false, 'time': '10:31 AM'},
-    {'text': 'What is the expected delivery date?', 'isMe': true, 'time': '10:32 AM'},
-    {'text': 'The order will be delivered by Feb 15th', 'isMe': false, 'time': '10:33 AM'},
+    {
+      'text': 'What is the expected delivery date?',
+      'isMe': true,
+      'time': '10:32 AM'
+    },
+    {
+      'text': 'The order will be delivered by Feb 15th',
+      'isMe': false,
+      'time': '10:33 AM'
+    },
   ];
 
   @override
@@ -500,7 +557,8 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.recipientName, style: const TextStyle(fontSize: 16)),
+                Text(widget.recipientName,
+                    style: const TextStyle(fontSize: 16)),
                 if (widget.orderId != null)
                   Text(
                     'Order #${widget.orderId}',
@@ -541,7 +599,8 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: const Color(0xFF1E2D33),
-              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+              border:
+                  Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
             ),
             child: Row(
               children: [
@@ -555,7 +614,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withOpacity(0.3)),
                       border: InputBorder.none,
                     ),
                   ),
@@ -589,7 +649,8 @@ class _ChatScreenState extends State<ChatScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
           color: isMe ? const Color(0xFF12AEE2) : const Color(0xFF1E2D33),
           borderRadius: BorderRadius.only(
@@ -606,7 +667,8 @@ class _ChatScreenState extends State<ChatScreen> {
             const SizedBox(height: 4),
             Text(
               time,
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
+              style:
+                  TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
             ),
           ],
         ),
