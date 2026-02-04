@@ -9,19 +9,28 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Cotton', 'Silk', 'Linen', 'Synthetic'];
+  final List<String> _categories = ['All', 'Cotton', 'Silk', 'Linen', 'Synthetic', 'Wool', 'Blends'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF101D22),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.pushNamed(context, '/sell-fabric');
+        },
+        backgroundColor: const Color(0xFF12AEE2),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.camera_alt),
+        label: const Text('SELL'),
+      ),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF1E2D33),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -35,60 +44,27 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     children: [
                       InkWell(
                         onTap: () => Navigator.of(context).pop(),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
+                        child: const Icon(Icons.arrow_back, color: Colors.white),
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF12AEE2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.polyline_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       const Text(
                         'Fabric Marketplace',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.search, color: Colors.white),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                        onPressed: () {},
-                      ),
+                      const Icon(Icons.notifications_none, color: Colors.white),
                     ],
                   ),
                   const SizedBox(height: 16),
                   // Search bar
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.black.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.1),
                       ),
@@ -96,9 +72,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     child: TextField(
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Search unique fabrics...',
+                        hintText: 'Find fabrics, yarns, or services...',
                         hintStyle: TextStyle(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withOpacity(0.5),
                         ),
                         prefixIcon: Icon(
                           Icons.search,
@@ -118,8 +94,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
             // Category filters
             Container(
-              height: 50,
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              height: 60,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              color: const Color(0xFF101D22),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -128,7 +105,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   final category = _categories[index];
                   final isSelected = category == _selectedCategory;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.only(right: 12),
                     child: FilterChip(
                       label: Text(category),
                       selected: isSelected,
@@ -137,16 +114,18 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                           _selectedCategory = category;
                         });
                       },
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      selectedColor: const Color(0xFF12AEE2).withOpacity(0.2),
+                      backgroundColor: const Color(0xFF1E2D33),
+                      selectedColor: const Color(0xFF12AEE2),
+                      checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                        color: isSelected ? const Color(0xFF12AEE2) : Colors.white,
+                        color: isSelected ? Colors.white : Colors.white70,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
-                      side: BorderSide(
-                        color: isSelected
-                            ? const Color(0xFF12AEE2)
-                            : Colors.white.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isSelected ? Colors.transparent : Colors.white12,
+                        ),
                       ),
                     ),
                   );
@@ -154,24 +133,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               ),
             ),
 
-            // Fabric grid
+            // Fabric List (OLX Style)
             Expanded(
-              child: GridView.builder(
+              child: ListView.separated(
                 padding: const EdgeInsets.all(16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                itemCount: 10, // Demo count
+                itemCount: 10,
+                separatorBuilder: (context, index) => const SizedBox(height: 16),
                 itemBuilder: (context, index) {
-                  return _FabricCard(
-                    title: 'Premium Silk Fabric ${index + 1}',
-                    seller: 'Creative Textiles Co.',
-                    price: '₹${(500 + index * 50)}/meter',
-                    availableMeters: '${20 + index * 5}m available',
+                  return _AdCard(
+                    title: 'Current Premium Silk Fabric ${index + 1}',
+                    price: '₹${500 + (index * 50)}',
+                    location: 'Mumbai, Maharashtra',
+                    timeAgo: '${index + 2} hours ago',
                     imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea19e59a?w=400&h=400&fit=crop',
+                    isFeatured: index == 0,
                     onTap: () {
                       Navigator.pushNamed(context, '/fabric-details');
                     },
@@ -186,20 +161,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   }
 }
 
-class _FabricCard extends StatelessWidget {
+class _AdCard extends StatelessWidget {
   final String title;
-  final String seller;
   final String price;
-  final String availableMeters;
+  final String location;
+  final String timeAgo;
   final String imageUrl;
+  final bool isFeatured;
   final VoidCallback onTap;
 
-  const _FabricCard({
+  const _AdCard({
     required this.title,
-    required this.seller,
     required this.price,
-    required this.availableMeters,
+    required this.location,
+    required this.timeAgo,
     required this.imageUrl,
+    this.isFeatured = false,
     required this.onTap,
   });
 
@@ -209,117 +186,108 @@ class _FabricCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.1),
-          ),
+          color: const Color(0xFF1E2D33),
+          borderRadius: BorderRadius.circular(8),
+          border: isFeatured 
+            ? Border.all(color: const Color(0xFFFFD700), width: 1)
+            : Border.all(color: Colors.white12),
         ),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                  image: DecorationImage(
-                    image: NetworkImage(imageUrl),
-                    fit: BoxFit.cover,
-                  ),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  bottomLeft: Radius.circular(8),
                 ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.favorite_border,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ],
+                image: DecorationImage(
+                  image: NetworkImage(imageUrl),
+                  fit: BoxFit.cover,
                 ),
               ),
+              child: isFeatured
+                  ? Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFD700),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                bottomRight: Radius.circular(4),
+                              ),
+                            ),
+                            child: const Text(
+                              'FEATURED',
+                              style: TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
             ),
-
-            // Details
+            
+            // Content
             Expanded(
-              flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          seller,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                        ),
-                      ],
-                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              price,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF12AEE2),
-                              ),
-                            ),
-                            Text(
-                              availableMeters,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.white.withOpacity(0.4),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF12AEE2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.add_shopping_cart,
+                        Text(
+                          price,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            size: 16,
+                          ),
+                        ),
+                        const Icon(Icons.favorite_border, color: Colors.white54, size: 20),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          location,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white38,
+                          ),
+                        ),
+                        Text(
+                          timeAgo,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white38,
                           ),
                         ),
                       ],

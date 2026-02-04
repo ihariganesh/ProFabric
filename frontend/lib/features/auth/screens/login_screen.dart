@@ -62,9 +62,16 @@ class _LoginScreenState extends State<LoginScreen> {
         if (kDebugMode) {
           print('Bypassing authentication on unsupported platform');
         }
-        // Navigate to home without authentication
+        // Navigate to dashboard with demo role
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/home');
+          Navigator.of(context).pushReplacementNamed(
+            '/dashboard',
+            arguments: {
+              'role': selectedRole, // Use the selected role from UI
+              'userName': 'Demo User',
+              'userEmail': 'demo@example.com',
+            },
+          );
         }
         return;
       }
@@ -221,7 +228,14 @@ class _LoginScreenState extends State<LoginScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushReplacementNamed('/home');
+                Navigator.of(context).pushReplacementNamed(
+                  '/dashboard',
+                  arguments: {
+                    'role': selectedRole,
+                    'userName': 'Demo User',
+                    'userEmail': 'demo@example.com',
+                  },
+                );
               },
               child: const Text(
                 'Demo Mode',

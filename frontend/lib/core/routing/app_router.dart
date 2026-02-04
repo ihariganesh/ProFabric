@@ -6,6 +6,7 @@ import '../../features/orders/screens/order_tracking_screen.dart';
 import '../../features/orders/screens/create_order_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/marketplace/screens/marketplace_screen.dart';
+import '../../features/marketplace/screens/sell_fabric_screen.dart';
 import '../../features/inventory/screens/my_inventory_screen.dart';
 import '../../features/vendor/screens/vendor_bidding_screen.dart';
 import '../../features/textile/screens/textile_dashboard_screen.dart';
@@ -16,6 +17,7 @@ import '../../features/logistics/screens/logistics_dashboard_screen.dart';
 import '../../features/buyer/screens/vendor_selection_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
+import '../../features/settings/screens/settings_screens.dart';
 import '../constants/user_roles.dart';
 
 class AppRouter {
@@ -44,6 +46,11 @@ class AppRouter {
   static const String payment = '/payment';
   static const String logisticsDashboard = '/logistics-dashboard';
   static const String vendorSelection = '/vendor-selection';
+  static const String profileSettings = '/profile-settings';
+  static const String appSettings = '/app-settings';
+  static const String helpSupport = '/help-support';
+  static const String about = '/about';
+  static const String sellFabric = '/sell-fabric';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -170,6 +177,28 @@ class AppRouter {
             body: Center(child: Text('Fabric Details Screen - Coming Soon')),
           ),
         );
+
+      case fabricDetails:
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(child: Text('Fabric Details Screen - Coming Soon')),
+          ),
+        );
+
+      case profileSettings:
+        return MaterialPageRoute(builder: (_) => const ProfileSettingsScreen());
+
+      case appSettings:
+        return MaterialPageRoute(builder: (_) => const AppSettingsScreen());
+
+      case helpSupport:
+        return MaterialPageRoute(builder: (_) => const HelpSupportScreen());
+
+      case about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
+
+      case sellFabric:
+        return MaterialPageRoute(builder: (_) => const SellFabricScreen());
 
       default:
         return MaterialPageRoute(
