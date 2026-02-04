@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/user_service.dart';
 
@@ -60,20 +61,58 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms (e.g., Linux)
+        // Use SharedPreferences for local role persistence
         if (kDebugMode) {
           print('Bypassing authentication on unsupported platform');
         }
-        // Navigate to dashboard with demo role
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(
-            '/dashboard',
-            arguments: {
-              'role': selectedRole, // Use the selected role from UI
-              'userName': 'Demo User',
-              'userEmail': 'demo@example.com',
-            },
-          );
+        
+        final prefs = await SharedPreferences.getInstance();
+        final email = _emailController.text.trim();
+        
+        if (authMode == 'signin') {
+          // Sign in - retrieve stored role
+          final storedRole = prefs.getString('user_role_$email');
+          
+          if (storedRole == null) {
+            throw 'No account found with this email. Please sign up first.';
+          }
+          
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed(
+              '/dashboard',
+              arguments: {
+                'role': storedRole, // Use stored role, not selected role
+                'userName': prefs.getString('user_name_$email') ?? 'Demo User',
+                'userEmail': email,
+              },
+            );
+          }
+        } else {
+          // Sign up - save the selected role
+          final existingRole = prefs.getString('user_role_$email');
+          
+          if (existingRole != null) {
+            throw 'An account with this email already exists. Please sign in instead.';
+          }
+          
+          await prefs.setString('user_role_$email', selectedRole);
+          await prefs.setString('user_name_$email', _nameController.text.trim());
+          
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed(
+              '/dashboard',
+              arguments: {
+                'role': selectedRole,
+                'userName': _nameController.text.trim(),
+                'userEmail': email,
+              },
+            );
+          }
         }
+        
+        setState(() {
+          _isLoading = false;
+        });
         return;
       }
       
@@ -160,20 +199,38 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms
+        // Use SharedPreferences for local role persistence
         if (kDebugMode) {
           print('Google Sign In not supported on this platform, bypassing...');
         }
+        
+        final prefs = await SharedPreferences.getInstance();
+        const demoEmail = 'demo@google.com';
+        
+        // Check if user already has a stored role
+        final storedRole = prefs.getString('user_role_$demoEmail');
+        String userRole;
+        
+        if (storedRole == null) {
+          // First time - save the selected role
+          await prefs.setString('user_role_$demoEmail', selectedRole);
+          await prefs.setString('user_name_$demoEmail', 'Google Demo User');
+          userRole = selectedRole;
+        } else {
+          // Existing user - use stored role
+          userRole = storedRole;
+        }
+        
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          // Navigate to dashboard with selected role
           Navigator.of(context).pushReplacementNamed(
             '/dashboard',
             arguments: {
-              'role': selectedRole,
-              'userName': 'Demo User',
-              'userEmail': 'demo@example.com',
+              'role': userRole,
+              'userName': prefs.getString('user_name_$demoEmail') ?? 'Google Demo User',
+              'userEmail': demoEmail,
             },
           );
         }
@@ -276,16 +333,37 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           if (isConfigError)
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                Navigator.of(context).pushReplacementNamed(
-                  '/dashboard',
-                  arguments: {
-                    'role': selectedRole,
-                    'userName': 'Demo User',
-                    'userEmail': 'demo@example.com',
-                  },
-                );
+                
+                // Use SharedPreferences for demo mode
+                final prefs = await SharedPreferences.getInstance();
+                const demoEmail = 'demo@example.com';
+                
+                // Check if demo user already has a role
+                final storedRole = prefs.getString('user_role_$demoEmail');
+                String userRole;
+                
+                if (storedRole == null) {
+                  // First time - save selected role
+                  await prefs.setString('user_role_$demoEmail', selectedRole);
+                  await prefs.setString('user_name_$demoEmail', 'Demo User');
+                  userRole = selectedRole;
+                } else {
+                  // Use stored role
+                  userRole = storedRole;
+                }
+                
+                if (mounted) {
+                  Navigator.of(context).pushReplacementNamed(
+                    '/dashboard',
+                    arguments: {
+                      'role': userRole,
+                      'userName': prefs.getString('user_name_$demoEmail') ?? 'Demo User',
+                      'userEmail': demoEmail,
+                    },
+                  );
+                }
               },
               child: const Text(
                 'Demo Mode',
