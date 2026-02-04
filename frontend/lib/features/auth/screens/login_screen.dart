@@ -1,8 +1,8 @@
-
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   final _authService = AuthService();
+  final _userService = UserService();
 
   // Supply Partner sub-roles mapping to backend roles
   static const Map<String, String> supplyPartnerSubRoles = {
@@ -83,12 +84,25 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text,
         );
         
+        // Fetch the user's role from Firestore
+        final userId = userCredential?.user?.uid;
+        if (userId == null) {
+          throw 'Failed to get user information';
+        }
+
+        final userData = await _userService.getUserData(userId);
+        final storedRole = userData?['role'] as String?;
+
+        if (storedRole == null) {
+          throw 'User role not found. Please contact support.';
+        }
+
         if (mounted) {
           Navigator.of(context).pushReplacementNamed(
             '/dashboard',
             arguments: {
-              'role': selectedRole,
-              'userName': userCredential?.user?.displayName ?? 'User',
+              'role': storedRole, // Use the stored role, not the selected one
+              'userName': userCredential?.user?.displayName ?? userData?['displayName'] ?? 'User',
               'userEmail': _emailController.text.trim(),
             },
           );
@@ -98,6 +112,19 @@ class _LoginScreenState extends State<LoginScreen> {
         final userCredential = await _authService.signUpWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
+          displayName: _nameController.text.trim(),
+        );
+
+        final userId = userCredential?.user?.uid;
+        if (userId == null) {
+          throw 'Failed to create user account';
+        }
+
+        // Save the selected role to Firestore
+        await _userService.saveUserRole(
+          userId: userId,
+          email: _emailController.text.trim(),
+          role: selectedRole,
           displayName: _nameController.text.trim(),
         );
 
@@ -156,11 +183,34 @@ class _LoginScreenState extends State<LoginScreen> {
       final userCredential = await _authService.signInWithGoogle();
 
       if (userCredential != null && mounted) {
+        final userId = userCredential.user?.uid;
+        if (userId == null) {
+          throw 'Failed to get user information';
+        }
+
+        // Check if user already has a role stored
+        final userData = await _userService.getUserData(userId);
+        String userRole;
+
+        if (userData == null || userData['role'] == null) {
+          // First time sign-in with Google - save the selected role
+          await _userService.saveUserRole(
+            userId: userId,
+            email: userCredential.user?.email ?? '',
+            role: selectedRole,
+            displayName: userCredential.user?.displayName ?? 'Google User',
+          );
+          userRole = selectedRole;
+        } else {
+          // Existing user - use their stored role
+          userRole = userData['role'] as String;
+        }
+
         Navigator.of(context).pushReplacementNamed(
           '/dashboard',
           arguments: {
-            'role': selectedRole,
-            'userName': userCredential.user?.displayName ?? 'Google User',
+            'role': userRole,
+            'userName': userCredential.user?.displayName ?? userData?['displayName'] ?? 'Google User',
             'userEmail': userCredential.user?.email ?? '',
           },
         );
@@ -532,6 +582,30 @@ class _LoginScreenState extends State<LoginScreen> {
                           letterSpacing: 1.5,
                         ),
                       ),
+                      if (authMode == 'signin')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Your role is already set. This selection is for display only.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.orange.withOpacity(0.8),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      if (authMode == 'signup')
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Choose carefully - your role cannot be changed later.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white.withOpacity(0.6),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 16),
                       // First row - Buyer & Textile Hub
                       Row(
