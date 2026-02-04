@@ -130,17 +130,22 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E2D33),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.tune,
-                      color: Colors.white,
-                      size: 20,
+                  GestureDetector(
+                    onTap: () {
+                      _showMenuOptions(context);
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2D33),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.tune,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -572,6 +577,91 @@ class _QuickActionButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showMenuOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E2D33),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildMenuOption(
+              icon: Icons.person_outline,
+              title: 'Profile Settings',
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuOption(
+              icon: Icons.settings_outlined,
+              title: 'App Settings',
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuOption(
+              icon: Icons.help_outline,
+              title: 'Help & Support',
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            _buildMenuOption(
+              icon: Icons.info_outline,
+              title: 'About',
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(color: Colors.white12, height: 32),
+            _buildMenuOption(
+              icon: Icons.logout,
+              title: 'Logout',
+              color: Colors.red,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: color ?? Colors.white70),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color ?? Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+      onTap: onTap,
     );
   }
 }

@@ -194,6 +194,7 @@ class OrderTrackingScreen extends StatelessWidget {
 
                           // Timeline
                           _buildTimelineStep(
+                            context,
                             icon: Icons.add_circle_outline,
                             iconColor: const Color(0xFF12AEE2),
                             title: 'Order Created',
@@ -205,6 +206,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.science_outlined,
                             iconColor: const Color(0xFF12AEE2),
                             title: 'Sample Produced',
@@ -216,6 +218,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.shopping_basket_outlined,
                             iconColor: const Color(0xFF12AEE2),
                             title: 'Fabric Sourced',
@@ -227,6 +230,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.print_outlined,
                             iconColor: const Color(0xFF12AEE2),
                             title: 'Printing In Progress',
@@ -240,6 +244,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.content_cut,
                             iconColor: Colors.white.withOpacity(0.3),
                             title: 'Stitching & Assembly',
@@ -252,6 +257,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.inventory_2_outlined,
                             iconColor: Colors.white.withOpacity(0.3),
                             title: 'Packaging',
@@ -264,6 +270,7 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
+                            context,
                             icon: Icons.local_shipping_outlined,
                             iconColor: Colors.white.withOpacity(0.3),
                             title: 'Ready for Shipment',
@@ -368,7 +375,8 @@ class OrderTrackingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineStep({
+  Widget _buildTimelineStep(
+    BuildContext context, {
     required IconData icon,
     required Color iconColor,
     required String title,

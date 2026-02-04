@@ -44,7 +44,6 @@ class AppRouter {
   static const String payment = '/payment';
   static const String logisticsDashboard = '/logistics-dashboard';
   static const String vendorSelection = '/vendor-selection';
-  static const String chat = '/chat';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -155,16 +154,6 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => SampleApprovalScreen(
             orderId: args?['orderId'] ?? 0,
-          ),
-        );
-
-      case chat:
-        final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => ChatScreen(
-            orderId: args?['orderId'],
-            recipientId: args?['recipientId'],
-            recipientName: args?['recipientName'] ?? 'Chat',
           ),
         );
 
@@ -533,183 +522,6 @@ class _SampleApprovalScreenState extends State<SampleApprovalScreen> {
             child: const Text('Reject', style: TextStyle(color: Colors.white)),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// Chat Screen
-class ChatScreen extends StatefulWidget {
-  final int? orderId;
-  final int? recipientId;
-  final String recipientName;
-
-  const ChatScreen({
-    super.key,
-    this.orderId,
-    this.recipientId,
-    required this.recipientName,
-  });
-
-  @override
-  State<ChatScreen> createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text': 'Hi, I have a question about the order',
-      'isMe': true,
-      'time': '10:30 AM'
-    },
-    {'text': 'Sure, how can I help you?', 'isMe': false, 'time': '10:31 AM'},
-    {
-      'text': 'What is the expected delivery date?',
-      'isMe': true,
-      'time': '10:32 AM'
-    },
-    {
-      'text': 'The order will be delivered by Feb 15th',
-      'isMe': false,
-      'time': '10:33 AM'
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF101D22),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1E2D33),
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFF12AEE2),
-              child: Text(
-                widget.recipientName[0].toUpperCase(),
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.recipientName,
-                    style: const TextStyle(fontSize: 16)),
-                if (widget.orderId != null)
-                  Text(
-                    'Order #${widget.orderId}',
-                    style: const TextStyle(fontSize: 12, color: Colors.white54),
-                  ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.call),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(
-                  message['text'] as String,
-                  message['isMe'] as bool,
-                  message['time'] as String,
-                );
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E2D33),
-              border:
-                  Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.attach_file, color: Colors.white54),
-                  onPressed: () {},
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      hintStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.3)),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Color(0xFF12AEE2)),
-                  onPressed: () {
-                    if (_messageController.text.trim().isNotEmpty) {
-                      setState(() {
-                        _messages.add({
-                          'text': _messageController.text,
-                          'isMe': true,
-                          'time': 'Now',
-                        });
-                        _messageController.clear();
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(String text, bool isMe, String time) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        constraints:
-            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        decoration: BoxDecoration(
-          color: isMe ? const Color(0xFF12AEE2) : const Color(0xFF1E2D33),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isMe ? const Radius.circular(16) : Radius.zero,
-            bottomRight: isMe ? Radius.zero : const Radius.circular(16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(text, style: const TextStyle(color: Colors.white)),
-            const SizedBox(height: 4),
-            Text(
-              time,
-              style:
-                  TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10),
-            ),
-          ],
-        ),
       ),
     );
   }
