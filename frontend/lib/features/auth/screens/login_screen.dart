@@ -71,21 +71,39 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (authMode == 'signin') {
         // Sign in with email and password
-        await _authService.signInWithEmailPassword(
+        final userCredential = await _authService.signInWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+        
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(
+            '/dashboard',
+            arguments: {
+              'role': selectedRole,
+              'userName': userCredential?.user?.displayName ?? 'User',
+              'userEmail': _emailController.text.trim(),
+            },
+          );
+        }
       } else {
         // Sign up with email and password
-        await _authService.signUpWithEmailPassword(
+        final userCredential = await _authService.signUpWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
         );
-      }
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(
+            '/dashboard',
+            arguments: {
+              'role': selectedRole,
+              'userName': _nameController.text.trim(),
+              'userEmail': _emailController.text.trim(),
+            },
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -115,8 +133,15 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() {
             _isLoading = false;
           });
-          // Navigate directly without showing error
-          Navigator.of(context).pushReplacementNamed('/home');
+          // Navigate to dashboard with selected role
+          Navigator.of(context).pushReplacementNamed(
+            '/dashboard',
+            arguments: {
+              'role': selectedRole,
+              'userName': 'Demo User',
+              'userEmail': 'demo@example.com',
+            },
+          );
         }
         return;
       }
@@ -124,7 +149,14 @@ class _LoginScreenState extends State<LoginScreen> {
       final userCredential = await _authService.signInWithGoogle();
 
       if (userCredential != null && mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.of(context).pushReplacementNamed(
+          '/dashboard',
+          arguments: {
+            'role': selectedRole,
+            'userName': userCredential.user?.displayName ?? 'Google User',
+            'userEmail': userCredential.user?.email ?? '',
+          },
+        );
       } else {
         // User canceled the sign-in
         setState(() {

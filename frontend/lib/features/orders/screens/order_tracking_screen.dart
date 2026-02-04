@@ -194,23 +194,45 @@ class OrderTrackingScreen extends StatelessWidget {
 
                           // Timeline
                           _buildTimelineStep(
-                            icon: Icons.check_circle,
+                            icon: Icons.add_circle_outline,
                             iconColor: const Color(0xFF12AEE2),
-                            title: 'Thread Sourced',
-                            subtitle: 'Egyptian Cotton - Giza 45',
-                            time: 'Completed Oct 20, 2023',
-                            buttonText: 'Vendor',
+                            title: 'Order Created',
+                            subtitle: 'Your design specification submitted',
+                            time: 'Oct 15, 2023',
+                            buttonText: 'Details',
                             isCompleted: true,
                             isLast: false,
                           ),
 
                           _buildTimelineStep(
-                            icon: Icons.factory,
+                            icon: Icons.science_outlined,
                             iconColor: const Color(0xFF12AEE2),
-                            title: 'In Production at Mill X',
-                            subtitle: 'Fabric weaving and dyeing process',
-                            time: 'In Progress • 45% Complete',
-                            buttonText: 'Mill X',
+                            title: 'Sample Produced',
+                            subtitle: 'Pre-production sample is ready',
+                            time: 'Oct 18, 2023',
+                            buttonText: 'Approve',
+                            isCompleted: true,
+                            isLast: false,
+                          ),
+
+                          _buildTimelineStep(
+                            icon: Icons.shopping_basket_outlined,
+                            iconColor: const Color(0xFF12AEE2),
+                            title: 'Fabric Sourced',
+                            subtitle: 'Egyptian Cotton sourced from Weaver',
+                            time: 'Oct 20, 2023',
+                            buttonText: 'Sellers',
+                            isCompleted: true,
+                            isLast: false,
+                          ),
+
+                          _buildTimelineStep(
+                            icon: Icons.print_outlined,
+                            iconColor: const Color(0xFF12AEE2),
+                            title: 'Printing In Progress',
+                            subtitle: 'Digital printing on 500m fabric',
+                            time: 'In Progress • 65%',
+                            buttonText: 'Printer',
                             isCompleted: false,
                             isActive: true,
                             isLast: false,
@@ -218,27 +240,39 @@ class OrderTrackingScreen extends StatelessWidget {
                           ),
 
                           _buildTimelineStep(
-                            icon: Icons.verified_user,
+                            icon: Icons.content_cut,
                             iconColor: Colors.white.withOpacity(0.3),
-                            title: 'Quality Check',
-                            subtitle: 'Tensile and color fastness testing',
-                            time: 'Scheduled for Oct 25',
-                            buttonText: 'QA Team',
+                            title: 'Stitching & Assembly',
+                            subtitle: 'Cutting and sewing into garments',
+                            time: 'Scheduled: Oct 25',
+                            buttonText: 'Stitcher',
                             isCompleted: false,
                             isLast: false,
                             opacity: 0.6,
                           ),
 
                           _buildTimelineStep(
-                            icon: Icons.local_shipping,
+                            icon: Icons.inventory_2_outlined,
                             iconColor: Colors.white.withOpacity(0.3),
-                            title: 'Out for Delivery',
-                            subtitle: 'Express Air Freight to Hub',
-                            time: 'Estimated Oct 28',
+                            title: 'Packaging',
+                            subtitle: 'Final inspection and labeling',
+                            time: 'Scheduled: Oct 27',
+                            buttonText: 'Unit',
+                            isCompleted: false,
+                            isLast: false,
+                            opacity: 0.4,
+                          ),
+
+                          _buildTimelineStep(
+                            icon: Icons.local_shipping_outlined,
+                            iconColor: Colors.white.withOpacity(0.3),
+                            title: 'Ready for Shipment',
+                            subtitle: 'Logistics provider assigned',
+                            time: 'Est: Oct 28',
                             buttonText: 'Courier',
                             isCompleted: false,
                             isLast: true,
-                            opacity: 0.4,
+                            opacity: 0.2,
                           ),
                         ],
                       ),
@@ -440,7 +474,17 @@ class OrderTrackingScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/chat',
+                          arguments: {
+                            'orderId': 'FB-8921',
+                            'recipientName': buttonText,
+                            'recipientRole': _getRoleForButton(buttonText),
+                          },
+                        );
+                      },
                       icon: const Icon(Icons.chat, size: 14),
                       label: Text(buttonText),
                       style: ElevatedButton.styleFrom(
@@ -506,6 +550,27 @@ class OrderTrackingScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _getRoleForButton(String text) {
+    switch (text) {
+      case 'Details':
+        return 'Buyer Support';
+      case 'Approve':
+        return 'Design Studio';
+      case 'Sellers':
+        return 'Fabric Market';
+      case 'Printer':
+        return 'Printing Unit';
+      case 'Stitcher':
+        return 'Stitching Unit';
+      case 'Unit':
+        return 'Packaging Hub';
+      case 'Courier':
+        return 'Logistics Provider';
+      default:
+        return 'Vendor';
+    }
   }
 }
 

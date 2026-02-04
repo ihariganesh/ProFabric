@@ -13,6 +13,9 @@ import '../../features/vendor/screens/vendor_dashboard_screen.dart';
 import '../../features/buyer/screens/buyer_dashboard_screen.dart';
 import '../../features/payments/screens/payment_screen.dart';
 import '../../features/logistics/screens/logistics_dashboard_screen.dart';
+import '../../features/buyer/screens/vendor_selection_screen.dart';
+import '../../features/chat/screens/chat_screen.dart';
+import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../constants/user_roles.dart';
 
 class AppRouter {
@@ -40,6 +43,8 @@ class AppRouter {
   static const String buyerDashboard = '/buyer-dashboard';
   static const String payment = '/payment';
   static const String logisticsDashboard = '/logistics-dashboard';
+  static const String vendorSelection = '/vendor-selection';
+  static const String chat = '/chat';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -55,6 +60,24 @@ class AppRouter {
 
       case createOrder:
         return MaterialPageRoute(builder: (_) => const CreateOrderScreen());
+
+      case vendorSelection:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => VendorSelectionScreen(
+            designId: args?['designId'],
+          ),
+        );
+
+      case chat:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ChatScreen(
+            orderId: args?['orderId'] ?? 'FB-8921',
+            recipientName: args?['recipientName'] ?? 'Vendor Hub',
+            recipientRole: args?['recipientRole'] ?? 'Hub Orchestrator',
+          ),
+        );
 
       case buyerDashboard:
         return MaterialPageRoute(builder: (_) => const BuyerDashboardScreen());
@@ -190,7 +213,7 @@ class AppRouter {
           userEmail: userEmail,
         );
       case UserRole.admin:
-        return const AdminDashboardPlaceholder();
+        return const AdminDashboardScreen();
     }
   }
 }

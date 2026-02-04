@@ -1167,7 +1167,10 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacementNamed(
+                    '/vendor-selection',
+                    arguments: {'designId': 'ORD-CREATED'},
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00C853),

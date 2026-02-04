@@ -511,7 +511,11 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          // Navigate to vendor selection
+                          Navigator.pushNamed(
+                            context,
+                            '/vendor-selection',
+                            arguments: {'designId': 'AI-GEN-123'},
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
