@@ -14,16 +14,7 @@ void main() async {
   // Initialize Firebase only on supported platforms
   if (!kIsWeb && !Platform.isLinux) {
     try {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: "AIzaSyDemoKey-REPLACE_WITH_YOUR_KEY",
-          authDomain: "profabric-demo.firebaseapp.com",
-          projectId: "profabric-demo",
-          storageBucket: "profabric-demo.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:abcdef123456",
-        ),
-      );
+      await Firebase.initializeApp();
     } catch (e) {
       debugPrint('Firebase initialization failed: $e');
     }

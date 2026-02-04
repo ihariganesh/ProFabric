@@ -360,9 +360,8 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
-class UnauthorizedException implements Exception {
-  final String message;
-  UnauthorizedException(this.message);
+class UnauthorizedException extends ApiException {
+  UnauthorizedException(String message) : super(message, 401);
 
   @override
   String toString() => message;

@@ -157,6 +157,60 @@ class AuthService {
     }
   }
 
+  // Send sign-in link to email
+  Future<void> sendEmailLink({
+    required String email,
+  }) async {
+    if (!_isFirebaseSupported) {
+      throw 'Firebase Auth is not supported on this platform';
+    }
+    try {
+      var acs = ActionCodeSettings(
+        // URL must be whitelisted in the Firebase Console.
+        url: 'https://fabricflow.page.link/login', 
+        handleCodeInApp: true,
+        iOSBundleId: 'com.example.fabricflow',
+        androidPackageName: 'com.example.fabricflow',
+        androidInstallApp: true,
+        androidMinimumVersion: '12',
+      );
+
+      await _firebaseAuth!.sendSignInLinkToEmail(
+        email: email,
+        actionCodeSettings: acs,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to send sign-in link. Please try again.';
+    }
+  }
+
+  // Sign in with email link
+  Future<UserCredential?> signInWithEmailLink({
+    required String email,
+    required String emailLink,
+  }) async {
+    if (!_isFirebaseSupported) {
+      throw 'Firebase Auth is not supported on this platform';
+    }
+    try {
+      if (_firebaseAuth!.isSignInWithEmailLink(emailLink)) {
+        final credential = await _firebaseAuth!.signInWithEmailLink(
+          email: email,
+          emailLink: emailLink,
+        );
+        return credential;
+      } else {
+        throw 'Invalid email sign-in link.';
+      }
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Failed to sign in with link. Please try again.';
+    }
+  }
+
   // Handle Firebase Auth exceptions
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
@@ -182,6 +236,8 @@ class AuthService {
         return 'An account exists with the same email but different sign-in credentials.';
       case 'network-request-failed':
         return 'Network error. Please check your connection.';
+      case 'invalid-action-code':
+        return 'The sign-in link is invalid or has expired.';
       default:
         if (kDebugMode) {
           print('Firebase Auth Error: ${e.code} - ${e.message}');

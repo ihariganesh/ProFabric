@@ -893,17 +893,41 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {
-                                // Handle forgot password
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Password reset link sent to your email',
+                              onPressed: () async {
+                                final email = _emailController.text.trim();
+                                if (email.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Please enter your email address first'),
+                                      backgroundColor: Colors.red,
+                                      behavior: SnackBarBehavior.floating,
                                     ),
-                                    backgroundColor: Color(0xFF12AEE2),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
+                                  );
+                                  return;
+                                }
+
+                                try {
+                                  await _authService.sendPasswordResetEmail(email);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Password reset link sent to $email'),
+                                        backgroundColor: const Color(0xFF12AEE2),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(e.toString()),
+                                        backgroundColor: Colors.red,
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               child: const Text(
                                 'Forgot password?',
