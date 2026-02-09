@@ -114,8 +114,50 @@ class AuthService {
       if (kDebugMode) {
         print('Google Sign In error: $e');
       }
+      
+      // Workaround for PigeonUserDetails type casting error
+      // The error occurs in google_sign_in plugin but Firebase Auth actually succeeds
+      final errorStr = e.toString();
+      if (errorStr.contains('PigeonUserDetails') || errorStr.contains('List<Object?>')) {
+        if (kDebugMode) {
+          print('Caught PigeonUserDetails error, checking if Firebase Auth succeeded...');
+        }
+        
+        // Wait a moment for Firebase Auth to complete
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Check if user is actually signed in to Firebase
+        await _firebaseAuth!.currentUser?.reload();
+        final currentUser = _firebaseAuth!.currentUser;
+        if (currentUser != null) {
+          if (kDebugMode) {
+            print('Firebase Auth succeeded despite google_sign_in error: ${currentUser.email}');
+          }
+          // Since we can't create UserCredential directly, we'll sign in again with the credential
+          // This should work because the user is already authenticated
+          try {
+            final googleUser = await _googleSignInInstance!.signInSilently();
+            if (googleUser != null) {
+              final googleAuth = await googleUser.authentication;
+              final credential = GoogleAuthProvider.credential(
+                accessToken: googleAuth.accessToken,
+                idToken: googleAuth.idToken,
+              );
+              // This time it should work since the user is already signed in
+              return await _firebaseAuth!.signInWithCredential(credential);
+            }
+          } catch (silentSignInError) {
+            if (kDebugMode) {
+              print('Silent sign-in also failed, but user is authenticated: $silentSignInError');
+            }
+            // User is authenticated, just return null to indicate success
+            // The calling code should check _firebaseAuth.currentUser
+            return null;
+          }
+        }
+      }
+      
       // Check for common Google Sign-In errors
-      final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('apiexception: 10')) {
         throw 'Google Sign-In configuration error. Check SHA-1 fingerprint in Firebase Console.';
       } else if (errorStr.contains('apiexception: 12500')) {

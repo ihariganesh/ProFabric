@@ -1,9 +1,8 @@
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/auth_service.dart';
-import '../../../core/services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   final _authService = AuthService();
-  final _userService = UserService();
 
   // Supply Partner sub-roles mapping to backend roles
   static const Map<String, String> supplyPartnerSubRoles = {
@@ -61,122 +59,33 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms (e.g., Linux)
-        // Use SharedPreferences for local role persistence
         if (kDebugMode) {
           print('Bypassing authentication on unsupported platform');
         }
-        
-        final prefs = await SharedPreferences.getInstance();
-        final email = _emailController.text.trim();
-        
-        if (authMode == 'signin') {
-          // Sign in - retrieve stored role
-          final storedRole = prefs.getString('user_role_$email');
-          
-          if (storedRole == null) {
-            throw 'No account found with this email. Please sign up first.';
-          }
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed(
-              '/dashboard',
-              arguments: {
-                'role': storedRole, // Use stored role, not selected role
-                'userName': prefs.getString('user_name_$email') ?? 'Demo User',
-                'userEmail': email,
-              },
-            );
-          }
-        } else {
-          // Sign up - save the selected role
-          final existingRole = prefs.getString('user_role_$email');
-          
-          if (existingRole != null) {
-            throw 'An account with this email already exists. Please sign in instead.';
-          }
-          
-          await prefs.setString('user_role_$email', selectedRole);
-          await prefs.setString('user_name_$email', _nameController.text.trim());
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed(
-              '/dashboard',
-              arguments: {
-                'role': selectedRole,
-                'userName': _nameController.text.trim(),
-                'userEmail': email,
-              },
-            );
-          }
+        // Navigate to home without authentication
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
         }
-        
-        setState(() {
-          _isLoading = false;
-        });
         return;
       }
       
       if (authMode == 'signin') {
         // Sign in with email and password
-        final userCredential = await _authService.signInWithEmailPassword(
+        await _authService.signInWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        
-        // Fetch the user's role from Firestore
-        final userId = userCredential?.user?.uid;
-        if (userId == null) {
-          throw 'Failed to get user information';
-        }
-
-        final userData = await _userService.getUserData(userId);
-        final storedRole = userData?['role'] as String?;
-
-        if (storedRole == null) {
-          throw 'User role not found. Please contact support.';
-        }
-
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(
-            '/dashboard',
-            arguments: {
-              'role': storedRole, // Use the stored role, not the selected one
-              'userName': userCredential?.user?.displayName ?? userData?['displayName'] ?? 'User',
-              'userEmail': _emailController.text.trim(),
-            },
-          );
-        }
       } else {
         // Sign up with email and password
-        final userCredential = await _authService.signUpWithEmailPassword(
+        await _authService.signUpWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
         );
+      }
 
-        final userId = userCredential?.user?.uid;
-        if (userId == null) {
-          throw 'Failed to create user account';
-        }
-
-        // Save the selected role to Firestore
-        await _userService.saveUserRole(
-          userId: userId,
-          email: _emailController.text.trim(),
-          role: selectedRole,
-          displayName: _nameController.text.trim(),
-        );
-
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(
-            '/dashboard',
-            arguments: {
-              'role': selectedRole,
-              'userName': _nameController.text.trim(),
-              'userEmail': _emailController.text.trim(),
-            },
-          );
-        }
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
       if (mounted) {
@@ -199,40 +108,15 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms
-        // Use SharedPreferences for local role persistence
         if (kDebugMode) {
           print('Google Sign In not supported on this platform, bypassing...');
         }
-        
-        final prefs = await SharedPreferences.getInstance();
-        const demoEmail = 'demo@google.com';
-        
-        // Check if user already has a stored role
-        final storedRole = prefs.getString('user_role_$demoEmail');
-        String userRole;
-        
-        if (storedRole == null) {
-          // First time - save the selected role
-          await prefs.setString('user_role_$demoEmail', selectedRole);
-          await prefs.setString('user_name_$demoEmail', 'Google Demo User');
-          userRole = selectedRole;
-        } else {
-          // Existing user - use stored role
-          userRole = storedRole;
-        }
-        
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          Navigator.of(context).pushReplacementNamed(
-            '/dashboard',
-            arguments: {
-              'role': userRole,
-              'userName': prefs.getString('user_name_$demoEmail') ?? 'Google Demo User',
-              'userEmail': demoEmail,
-            },
-          );
+          // Navigate directly without showing error
+          Navigator.of(context).pushReplacementNamed('/home');
         }
         return;
       }
@@ -240,37 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final userCredential = await _authService.signInWithGoogle();
 
       if (userCredential != null && mounted) {
-        final userId = userCredential.user?.uid;
-        if (userId == null) {
-          throw 'Failed to get user information';
-        }
-
-        // Check if user already has a role stored
-        final userData = await _userService.getUserData(userId);
-        String userRole;
-
-        if (userData == null || userData['role'] == null) {
-          // First time sign-in with Google - save the selected role
-          await _userService.saveUserRole(
-            userId: userId,
-            email: userCredential.user?.email ?? '',
-            role: selectedRole,
-            displayName: userCredential.user?.displayName ?? 'Google User',
-          );
-          userRole = selectedRole;
-        } else {
-          // Existing user - use their stored role
-          userRole = userData['role'] as String;
-        }
-
-        Navigator.of(context).pushReplacementNamed(
-          '/dashboard',
-          arguments: {
-            'role': userRole,
-            'userName': userCredential.user?.displayName ?? userData?['displayName'] ?? 'Google User',
-            'userEmail': userCredential.user?.email ?? '',
-          },
-        );
+        Navigator.of(context).pushReplacementNamed('/home');
       } else {
         // User canceled the sign-in
         setState(() {
@@ -333,37 +187,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           if (isConfigError)
             TextButton(
-              onPressed: () async {
+              onPressed: () {
                 Navigator.of(context).pop();
-                
-                // Use SharedPreferences for demo mode
-                final prefs = await SharedPreferences.getInstance();
-                const demoEmail = 'demo@example.com';
-                
-                // Check if demo user already has a role
-                final storedRole = prefs.getString('user_role_$demoEmail');
-                String userRole;
-                
-                if (storedRole == null) {
-                  // First time - save selected role
-                  await prefs.setString('user_role_$demoEmail', selectedRole);
-                  await prefs.setString('user_name_$demoEmail', 'Demo User');
-                  userRole = selectedRole;
-                } else {
-                  // Use stored role
-                  userRole = storedRole;
-                }
-                
-                if (mounted) {
-                  Navigator.of(context).pushReplacementNamed(
-                    '/dashboard',
-                    arguments: {
-                      'role': userRole,
-                      'userName': prefs.getString('user_name_$demoEmail') ?? 'Demo User',
-                      'userEmail': demoEmail,
-                    },
-                  );
-                }
+                Navigator.of(context).pushReplacementNamed('/home');
               },
               child: const Text(
                 'Demo Mode',
@@ -660,30 +486,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           letterSpacing: 1.5,
                         ),
                       ),
-                      if (authMode == 'signin')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Your role is already set. This selection is for display only.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange.withOpacity(0.8),
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
-                      if (authMode == 'signup')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Choose carefully - your role cannot be changed later.',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.6),
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ),
                       const SizedBox(height: 16),
                       // First row - Buyer & Textile Hub
                       Row(
@@ -1091,41 +893,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () async {
-                                final email = _emailController.text.trim();
-                                if (email.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Please enter your email address first'),
-                                      backgroundColor: Colors.red,
-                                      behavior: SnackBarBehavior.floating,
+                              onPressed: () {
+                                // Handle forgot password
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Password reset link sent to your email',
                                     ),
-                                  );
-                                  return;
-                                }
-
-                                try {
-                                  await _authService.sendPasswordResetEmail(email);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Password reset link sent to $email'),
-                                        backgroundColor: const Color(0xFF12AEE2),
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(e.toString()),
-                                        backgroundColor: Colors.red,
-                                        behavior: SnackBarBehavior.floating,
-                                      ),
-                                    );
-                                  }
-                                }
+                                    backgroundColor: Color(0xFF12AEE2),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
                               },
                               child: const Text(
                                 'Forgot password?',

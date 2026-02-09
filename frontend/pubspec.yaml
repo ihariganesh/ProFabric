@@ -26,29 +26,28 @@ dependencies:
 
   # UI Components
   cupertino_icons: ^1.0.6
-  google_fonts: ^8.0.0
+  google_fonts: ^6.1.0
   flutter_svg: ^2.0.9
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
 
   # Maps & Location
   google_maps_flutter: ^2.5.0
-  geolocator: ^14.0.2
-  geocoding: ^4.0.0
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
 
   # Real-Time
-  socket_io_client: ^3.1.4
+  socket_io_client: ^2.0.3+1
 
   # Utils
-  intl: ^0.20.2
+  intl: ^0.18.1
   uuid: ^4.3.3
   logger: ^2.0.2+1
 
   # Authentication
-  google_sign_in: ^6.3.0
-  firebase_core: ^3.0.0
-  firebase_auth: ^5.0.0
-  cloud_firestore: ^5.0.0
+  google_sign_in: ^6.2.1
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
 
   # Image Processing
   image_picker: ^1.0.7
@@ -56,7 +55,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.1
   
   # Code Generation
   build_runner: ^2.4.7
@@ -68,4 +67,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-#  google_sign_in_android: 6.1.31
