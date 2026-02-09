@@ -1,10 +1,82 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/auth_service.dart';
 
-class ProfileSettingsScreen extends StatelessWidget {
+class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
 
   @override
+  State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
+}
+
+class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
+  final _authService = AuthService();
+  bool _isUpdating = false;
+
+  void _editProfile() {
+    final user = _authService.currentUser;
+    final nameController = TextEditingController(text: user?.displayName);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E2D33),
+        title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: nameController,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: 'Display Name',
+            labelStyle: const TextStyle(color: Colors.white70),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF12AEE2)),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isNotEmpty) {
+                Navigator.pop(context);
+                setState(() => _isUpdating = true);
+                try {
+                  await _authService.updateDisplayName(newName);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Profile updated successfully!')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(e.toString())),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => _isUpdating = false);
+                  }
+                }
+              }
+            },
+            child: const Text('Save', style: TextStyle(color: Color(0xFF12AEE2))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
+    
     return Scaffold(
       backgroundColor: const Color(0xFF101D22),
       appBar: AppBar(
@@ -12,30 +84,49 @@ class ProfileSettingsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF1E2D33),
         foregroundColor: Colors.white,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          const CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage('https://avatar.iran.liara.run/public/42'),
+          ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Center(
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: user?.photoURL != null 
+                    ? NetworkImage(user!.photoURL!) 
+                    : const NetworkImage('https://avatar.iran.liara.run/public/42'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  user?.displayName ?? 'User Name',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+              Center(
+                child: Text(
+                  user?.email ?? 'user@example.com',
+                  style: const TextStyle(color: Colors.white54),
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildSettingsTile(
+                icon: Icons.person,
+                title: 'Edit Profile',
+                onTap: _editProfile,
+              ),
+              _buildSettingsTile(icon: Icons.lock, title: 'Change Password', onTap: () {}),
+              _buildSettingsTile(icon: Icons.notifications, title: 'Notification Preferences', onTap: () {}),
+            ],
           ),
-          const SizedBox(height: 16),
-          const Center(
-            child: Text(
-              'User Name',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          if (_isUpdating)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(color: Color(0xFF12AEE2)),
+              ),
             ),
-          ),
-          const Center(
-            child: Text(
-              'user@example.com',
-              style: TextStyle(color: Colors.white54),
-            ),
-          ),
-          const SizedBox(height: 32),
-          _buildSettingsTile(icon: Icons.person, title: 'Edit Profile', onTap: () {}),
-          _buildSettingsTile(icon: Icons.lock, title: 'Change Password', onTap: () {}),
-          _buildSettingsTile(icon: Icons.notifications, title: 'Notification Preferences', onTap: () {}),
         ],
       ),
     );

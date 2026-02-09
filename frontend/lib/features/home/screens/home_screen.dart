@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTab = 0;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -31,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
+
     return Scaffold(
       backgroundColor: const Color(0xFF101D22),
       body: SafeArea(
@@ -40,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF101D22).withOpacity(0.8),
+                color: Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -55,13 +59,13 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFF12AEE2).withOpacity(0.2),
+                        color: Color(0xFF12AEE2).withOpacity(0.2),
                         width: 2,
                       ),
-                      image: const DecorationImage(
-                        image: NetworkImage(
-                          'https://avatar.iran.liara.run/public/42',
-                        ),
+                      image: DecorationImage(
+                        image: user?.photoURL != null 
+                          ? NetworkImage(user!.photoURL!)
+                          : const NetworkImage('https://avatar.iran.liara.run/public/42'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -272,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF12AEE2).withOpacity(0.1),
+                color: Color(0xFF12AEE2).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(
@@ -590,9 +594,12 @@ class _HomeScreenState extends State<HomeScreen>
               icon: Icons.logout,
               title: 'Logout',
               color: Colors.red,
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/login');
+              onTap: () async {
+                await _authService.signOut();
+                if (mounted) {
+                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
               },
             ),
           ],

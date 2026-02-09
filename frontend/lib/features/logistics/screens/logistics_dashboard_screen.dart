@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Logistics Dashboard for shipment management
 /// 
@@ -139,6 +140,8 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
   }
 
   Widget _buildHeader() {
+    final authService = AuthService();
+    final user = authService.currentUser;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -153,14 +156,15 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.orange, width: 2),
-            ),
-            child: const Icon(Icons.local_shipping, color: Colors.orange),
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: user?.photoURL != null 
+                ? NetworkImage(user!.photoURL!) 
+                : null,
+            backgroundColor: Colors.orange,
+            child: user?.photoURL == null 
+                ? const Icon(Icons.local_shipping, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -858,7 +862,7 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF12AEE2).withOpacity(0.1),
+                color: Color(0xFF12AEE2).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -946,7 +950,7 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color:
-            selected ? const Color(0xFF12AEE2).withOpacity(0.2) : Colors.white.withOpacity(0.05),
+            selected ? Color(0xFF12AEE2).withOpacity(0.2) : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: selected

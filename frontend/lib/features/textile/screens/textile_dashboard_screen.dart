@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Textile Orchestrator Dashboard
 ///
@@ -75,6 +76,8 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _buildHeader() {
+    final authService = AuthService();
+    final user = authService.currentUser;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -89,20 +92,15 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: UserRole.textile.themeColor,
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              UserRole.textile.icon,
-              color: UserRole.textile.themeColor,
-            ),
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: user?.photoURL != null 
+                ? NetworkImage(user!.photoURL!) 
+                : null,
+            backgroundColor: UserRole.textile.themeColor,
+            child: user?.photoURL == null 
+                ? Icon(UserRole.textile.icon, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

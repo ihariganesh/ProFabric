@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/user_roles.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Generic Vendor Dashboard
 ///
@@ -71,6 +72,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen>
   }
 
   Widget _buildHeader() {
+    final authService = AuthService();
+    final user = authService.currentUser;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -85,20 +88,15 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: widget.userRole.themeColor,
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              widget.userRole.icon,
-              color: widget.userRole.themeColor,
-            ),
+          CircleAvatar(
+            radius: 24,
+            backgroundImage: user?.photoURL != null 
+                ? NetworkImage(user!.photoURL!) 
+                : null,
+            backgroundColor: widget.userRole.themeColor,
+            child: user?.photoURL == null 
+                ? Icon(widget.userRole.icon, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 12),
           Expanded(

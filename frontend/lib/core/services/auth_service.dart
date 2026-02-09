@@ -307,4 +307,32 @@ class AuthService {
   String? getUserPhotoURL() {
     return _firebaseAuth?.currentUser?.photoURL;
   }
+
+  // Update display name
+  Future<void> updateDisplayName(String name) async {
+    if (!_isFirebaseSupported) return;
+    try {
+      await _firebaseAuth?.currentUser?.updateDisplayName(name);
+      await _firebaseAuth?.currentUser?.reload();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update display name error: $e');
+      }
+      throw 'Failed to update name. Please try again.';
+    }
+  }
+
+  // Update photo URL
+  Future<void> updatePhotoURL(String url) async {
+    if (!_isFirebaseSupported) return;
+    try {
+      await _firebaseAuth?.currentUser?.updatePhotoURL(url);
+      await _firebaseAuth?.currentUser?.reload();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Update photo URL error: $e');
+      }
+      throw 'Failed to update photo. Please try again.';
+    }
+  }
 }

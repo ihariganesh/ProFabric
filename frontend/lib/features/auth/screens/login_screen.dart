@@ -330,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF12AEE2).withOpacity(0.2)
+              ? Color(0xFF12AEE2).withOpacity(0.2)
               : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -563,10 +563,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF12AEE2).withOpacity(0.1),
+                              color: Color(0xFF12AEE2).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: const Color(0xFF12AEE2).withOpacity(0.3),
+                                color: Color(0xFF12AEE2).withOpacity(0.3),
                               ),
                             ),
                             child: Row(
@@ -590,7 +590,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     'Change',
                                     style: TextStyle(
-                                      color: const Color(0xFF12AEE2).withOpacity(0.8),
+                                      color: Color(0xFF12AEE2).withOpacity(0.8),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -928,13 +928,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: const Color(0xFF12AEE2),
                               foregroundColor: const Color(0xFF101D22),
                               disabledBackgroundColor:
-                                  const Color(0xFF12AEE2).withOpacity(0.5),
+                                  Color(0xFF12AEE2).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 8,
                               shadowColor:
-                                  const Color(0xFF12AEE2).withOpacity(0.3),
+                                  Color(0xFF12AEE2).withOpacity(0.3),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -1108,12 +1108,12 @@ class _RoleCard extends StatelessWidget {
         height: 130,
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF12AEE2).withOpacity(0.1)
+              ? Color(0xFF12AEE2).withOpacity(0.1)
               : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF12AEE2).withOpacity(0.4)
+                ? Color(0xFF12AEE2).withOpacity(0.4)
                 : Colors.white.withOpacity(0.1),
             width: 1,
           ),
@@ -1132,7 +1132,7 @@ class _RoleCard extends StatelessWidget {
                     height: 32,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF12AEE2).withOpacity(0.2)
+                          ? Color(0xFF12AEE2).withOpacity(0.2)
                           : Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),

@@ -19,6 +19,7 @@ import '../../features/chat/screens/chat_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/settings/screens/settings_screens.dart';
 import '../constants/user_roles.dart';
+import '../services/auth_service.dart';
 
 class AppRouter {
   // Route Names
@@ -100,9 +101,12 @@ class AppRouter {
       case dashboard:
         // Role-based dashboard routing
         final args = settings.arguments as Map<String, dynamic>?;
+        final authService = AuthService();
+        final user = authService.currentUser;
+        
         final roleString = args?['role'] as String? ?? 'Buyer';
-        final userName = args?['userName'] as String? ?? 'User';
-        final userEmail = args?['userEmail'] as String? ?? '';
+        final userName = args?['userName'] as String? ?? user?.displayName ?? 'User';
+        final userEmail = args?['userEmail'] as String? ?? user?.email ?? '';
         final role = UserRole.fromString(roleString);
 
         return MaterialPageRoute(
@@ -111,30 +115,36 @@ class AppRouter {
 
       case textileDashboard:
         final args = settings.arguments as Map<String, dynamic>?;
+        final authService = AuthService();
+        final user = authService.currentUser;
         return MaterialPageRoute(
           builder: (_) => TextileDashboardScreen(
-            userName: args?['userName'] ?? 'Textile User',
-            userEmail: args?['userEmail'] ?? '',
+            userName: args?['userName'] ?? user?.displayName ?? 'Textile User',
+            userEmail: args?['userEmail'] ?? user?.email ?? '',
           ),
         );
 
       case vendorDashboard:
         final args = settings.arguments as Map<String, dynamic>?;
+        final authService = AuthService();
+        final user = authService.currentUser;
         final roleString = args?['role'] as String? ?? 'FabricSeller';
         return MaterialPageRoute(
           builder: (_) => VendorDashboardScreen(
             userRole: UserRole.fromString(roleString),
-            userName: args?['userName'] ?? 'Vendor User',
-            userEmail: args?['userEmail'] ?? '',
+            userName: args?['userName'] ?? user?.displayName ?? 'Vendor User',
+            userEmail: args?['userEmail'] ?? user?.email ?? '',
           ),
         );
 
       case logisticsDashboard:
         final args = settings.arguments as Map<String, dynamic>?;
+        final authService = AuthService();
+        final user = authService.currentUser;
         return MaterialPageRoute(
           builder: (_) => LogisticsDashboardScreen(
-            userName: args?['userName'] ?? 'Logistics User',
-            userEmail: args?['userEmail'] ?? '',
+            userName: args?['userName'] ?? user?.displayName ?? 'Logistics User',
+            userEmail: args?['userEmail'] ?? user?.email ?? '',
           ),
         );
 
@@ -168,13 +178,6 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
             body: Center(child: Text('List Fabric Screen - Coming Soon')),
-          ),
-        );
-
-      case fabricDetails:
-        return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Fabric Details Screen - Coming Soon')),
           ),
         );
 

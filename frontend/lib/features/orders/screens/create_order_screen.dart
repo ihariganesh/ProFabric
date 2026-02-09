@@ -154,7 +154,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C853).withOpacity(0.2),
+              color: Color(0xFF00C853).withOpacity(0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -310,7 +310,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border:
-                  Border.all(color: const Color(0xFF00C853).withOpacity(0.5)),
+                  Border.all(color: Color(0xFF00C853).withOpacity(0.5)),
               image: const DecorationImage(
                 image:
                     NetworkImage('https://picsum.photos/seed/fabric/400/200'),
@@ -560,12 +560,12 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF00C853).withOpacity(0.2),
-                const Color(0xFF00C853).withOpacity(0.05),
+                Color(0xFF00C853).withOpacity(0.2),
+                Color(0xFF00C853).withOpacity(0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF00C853).withOpacity(0.3)),
+            border: Border.all(color: Color(0xFF00C853).withOpacity(0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,7 +784,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF00C853).withOpacity(0.2),
+            color: Color(0xFF00C853).withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: const Color(0xFF00C853), size: 24),
@@ -1136,7 +1136,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00C853).withOpacity(0.2),
+                  color: Color(0xFF00C853).withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

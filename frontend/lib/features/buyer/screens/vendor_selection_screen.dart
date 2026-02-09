@@ -97,12 +97,12 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF12AEE2).withOpacity(0.2),
-            const Color(0xFF9C27B0).withOpacity(0.2),
+            Color(0xFF12AEE2).withOpacity(0.2),
+            Color(0xFF9C27B0).withOpacity(0.2),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF12AEE2).withOpacity(0.3)),
+        border: Border.all(color: Color(0xFF12AEE2).withOpacity(0.3)),
       ),
       child: const Row(
         children: [
@@ -192,7 +192,7 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF12AEE2).withOpacity(0.1),
+                              color: Color(0xFF12AEE2).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

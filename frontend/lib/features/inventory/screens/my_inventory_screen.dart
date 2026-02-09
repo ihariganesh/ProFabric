@@ -33,7 +33,7 @@ class _MyInventoryScreenState extends State<MyInventoryScreen>
             // Header
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF101D22).withOpacity(0.8),
+                color: Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -91,7 +91,7 @@ class _MyInventoryScreenState extends State<MyInventoryScreen>
             // Tabs
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF101D22).withOpacity(0.8),
+                color: Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -256,7 +256,7 @@ class _InventoryCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isListed
-                                  ? const Color(0xFF12AEE2).withOpacity(0.2)
+                                  ? Color(0xFF12AEE2).withOpacity(0.2)
                                   : Colors.orange.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(

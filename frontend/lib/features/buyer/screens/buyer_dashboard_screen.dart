@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/routing/app_router.dart';
+import '../../../core/services/auth_service.dart';
 
 /// Dashboard screen for Buyers
 /// Allows buyers to view their orders, create new orders, and track shipments
@@ -13,6 +13,7 @@ class BuyerDashboardScreen extends StatefulWidget {
 class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -51,7 +52,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, AppRouter.createOrder),
+        onPressed: () => Navigator.pushNamed(context, '/create-order'),
         backgroundColor: const Color(0xFF00C853),
         icon: const Icon(Icons.add),
         label: const Text('New Order'),
@@ -60,31 +61,37 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
   }
 
   Widget _buildAppBar() {
+    final user = _authService.currentUser;
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 24,
-            backgroundColor: Color(0xFF00C853),
-            child: Text('B',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold)),
+            backgroundImage: user?.photoURL != null 
+                ? NetworkImage(user!.photoURL!) 
+                : null,
+            backgroundColor: const Color(0xFF00C853),
+            child: user?.photoURL == null 
+                ? Text((user?.displayName ?? 'B')[0].toUpperCase(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold))
+                : null,
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Welcome back,',
                   style: TextStyle(color: Colors.white54, fontSize: 12),
                 ),
                 Text(
-                  'Buyer Dashboard',
-                  style: TextStyle(
+                  user?.displayName ?? 'Buyer',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -96,12 +103,12 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () =>
-                Navigator.pushNamed(context, AppRouter.notifications),
+                Navigator.pushNamed(context, '/notifications'),
           ),
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
             onPressed: () =>
-                Navigator.pushNamed(context, AppRouter.marketplace),
+                Navigator.pushNamed(context, '/marketplace'),
           ),
         ],
       ),
@@ -355,7 +362,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
               OutlinedButton(
                 onPressed: () => Navigator.pushNamed(
                   context,
-                  AppRouter.orderTracking,
+                  '/order-tracking',
                   arguments: {'orderId': order.id},
                 ),
                 style: OutlinedButton.styleFrom(
@@ -489,7 +496,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
               Expanded(
                 child: OutlinedButton(
                   onPressed: () =>
-                      Navigator.pushNamed(context, AppRouter.vendorBidding),
+                      Navigator.pushNamed(context, '/vendor-bidding'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.blue,
                     side: const BorderSide(color: Colors.blue),
@@ -567,7 +574,7 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF00C853).withOpacity(0.3)),
+            border: Border.all(color: Color(0xFF00C853).withOpacity(0.3)),
           ),
           child: Row(
             children: [
