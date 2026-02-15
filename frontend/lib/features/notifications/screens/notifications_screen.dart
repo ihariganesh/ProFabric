@@ -13,7 +13,7 @@ class NotificationsScreen extends StatelessWidget {
             // App Bar
             Container(
               decoration: BoxDecoration(
-                color: Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -188,12 +188,12 @@ class NotificationsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isUnread
-            ? Color(0xFF12AEE2).withOpacity(0.05)
+            ? const Color(0xFF12AEE2).withOpacity(0.05)
             : Colors.white.withOpacity(0.03),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isUnread
-              ? Color(0xFF12AEE2).withOpacity(0.2)
+              ? const Color(0xFF12AEE2).withOpacity(0.2)
               : Colors.white.withOpacity(0.05),
         ),
       ),

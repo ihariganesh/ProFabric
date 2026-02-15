@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -59,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen>
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Color(0xFF12AEE2).withOpacity(0.2),
+                        color: const Color(0xFF12AEE2).withOpacity(0.2),
                         width: 2,
                       ),
                       image: DecorationImage(
@@ -276,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Color(0xFF12AEE2).withOpacity(0.1),
+                color: const Color(0xFF12AEE2).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Text(

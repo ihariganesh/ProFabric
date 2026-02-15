@@ -160,14 +160,14 @@ class AppSettingsScreen extends StatelessWidget {
             title: const Text('Dark Mode', style: TextStyle(color: Colors.white)),
             value: true,
             onChanged: (val) {},
-            activeColor: const Color(0xFF12AEE2),
+            activeThumbColor: const Color(0xFF12AEE2),
             secondary: const Icon(Icons.dark_mode, color: Color(0xFF12AEE2)),
           ),
           SwitchListTile(
             title: const Text('Notifications', style: TextStyle(color: Colors.white)),
             value: true,
             onChanged: (val) {},
-            activeColor: const Color(0xFF12AEE2),
+            activeThumbColor: const Color(0xFF12AEE2),
             secondary: const Icon(Icons.notifications, color: Color(0xFF12AEE2)),
           ),
           ListTile(

@@ -18,7 +18,7 @@ class OrderTrackingScreen extends StatelessWidget {
             // App Bar
             Container(
               decoration: BoxDecoration(
-                color: Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -325,7 +325,7 @@ class OrderTrackingScreen extends StatelessWidget {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF101D22).withOpacity(0.8),
+          color: const Color(0xFF101D22).withOpacity(0.8),
           border: Border(
             top: BorderSide(
               color: Colors.white.withOpacity(0.05),
@@ -406,7 +406,7 @@ class OrderTrackingScreen extends StatelessWidget {
                 boxShadow: isActive
                     ? [
                         BoxShadow(
-                          color: Color(0xFF12AEE2).withOpacity(0.4),
+                          color: const Color(0xFF12AEE2).withOpacity(0.4),
                           blurRadius: 15,
                         ),
                       ]
@@ -586,7 +586,7 @@ class MapRoutePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Color(0xFF12AEE2).withOpacity(0.6)
+      ..color = const Color(0xFF12AEE2).withOpacity(0.6)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 

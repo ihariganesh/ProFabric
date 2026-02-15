@@ -12,6 +12,9 @@ import '../../features/vendor/screens/vendor_bidding_screen.dart';
 import '../../features/textile/screens/textile_dashboard_screen.dart';
 import '../../features/vendor/screens/vendor_dashboard_screen.dart';
 import '../../features/buyer/screens/buyer_dashboard_screen.dart';
+import '../../features/buyer/screens/buyer_home_screen.dart';
+import '../../features/buyer/screens/order_detail_screen.dart';
+import '../../features/buyer/screens/ai_vendor_match_screen.dart';
 import '../../features/payments/screens/payment_screen.dart';
 import '../../features/logistics/screens/logistics_dashboard_screen.dart';
 import '../../features/buyer/screens/vendor_selection_screen.dart';
@@ -52,6 +55,8 @@ class AppRouter {
   static const String helpSupport = '/help-support';
   static const String about = '/about';
   static const String sellFabric = '/sell-fabric';
+  static const String orderDetail = '/order-detail';
+  static const String aiVendorMatch = '/ai-vendor-match';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -87,7 +92,18 @@ class AppRouter {
         );
 
       case buyerDashboard:
-        return MaterialPageRoute(builder: (_) => const BuyerDashboardScreen());
+        return MaterialPageRoute(builder: (_) => const BuyerHomeScreen());
+
+      case orderDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(
+            orderId: args?['orderId'] ?? 'FB-0000',
+          ),
+        );
+
+      case aiVendorMatch:
+        return MaterialPageRoute(builder: (_) => const AIVendorMatchScreen());
 
       case payment:
         final args = settings.arguments as Map<String, dynamic>?;
@@ -215,7 +231,7 @@ class AppRouter {
       UserRole role, String userName, String userEmail) {
     switch (role) {
       case UserRole.buyer:
-        return const BuyerDashboardScreen();
+        return const BuyerHomeScreen();
       case UserRole.textile:
         return TextileDashboardScreen(userName: userName, userEmail: userEmail);
       case UserRole.logistics:

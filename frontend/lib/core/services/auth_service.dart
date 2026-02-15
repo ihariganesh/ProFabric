@@ -76,88 +76,80 @@ class AuthService {
     }
   }
 
+  // Check if error is the known PigeonUserDetails deserialization bug
+  bool _isPigeonError(dynamic e) {
+    final s = e.toString();
+    return s.contains('PigeonUserDetails') || s.contains("List<Object?>");
+  }
+
+  // Wait for Firebase Auth to complete and return currentUser if signed in
+  Future<bool> _waitForFirebaseAuth() async {
+    // Firebase Auth often completes before the Pigeon error is thrown,
+    // but give it a moment just in case
+    for (int i = 0; i < 3; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      try {
+        await _firebaseAuth!.currentUser?.reload();
+      } catch (_) {}
+      if (_firebaseAuth!.currentUser != null) {
+        if (kDebugMode) {
+          print('Firebase Auth confirmed: ${_firebaseAuth!.currentUser!.email}');
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     if (!_isFirebaseSupported) {
       throw 'Firebase Auth is not supported on this platform';
     }
+    
     try {
-      // Trigger the authentication flow
+      // Trigger the interactive Google Sign-In flow
       final GoogleSignInAccount? googleUser = await _googleSignInInstance!.signIn();
 
       if (googleUser == null) {
-        // User canceled the sign-in
-        return null;
+        return null; // User canceled
       }
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential
+      // Get tokens and authenticate with Firebase
+      final googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
-      // Sign in to Firebase with the Google credential
       final userCredential = await _firebaseAuth!.signInWithCredential(credential);
 
       if (kDebugMode) {
         print('Google Sign In successful: ${userCredential.user?.email}');
       }
-
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
+      // google_sign_in v6.x has a Pigeon deserialization bug on newer Android.
+      // The native Google Sign-In + Firebase Auth both succeed, but the Dart
+      // Pigeon layer fails to deserialize the response. This affects signIn(),
+      // signInSilently(), and .authentication — so we skip all of them and
+      // just check Firebase's auth state directly.
+      if (_isPigeonError(e)) {
+        if (kDebugMode) {
+          print('PigeonUserDetails bug — checking Firebase auth state directly...');
+        }
+        if (await _waitForFirebaseAuth()) {
+          return null; // Auth succeeded — caller uses currentUser
+        }
+        throw 'Google Sign-In failed. Please try again.';
+      }
+      
+      // Handle other Google Sign-In errors
       if (kDebugMode) {
         print('Google Sign In error: $e');
       }
-      
-      // Workaround for PigeonUserDetails type casting error
-      // The error occurs in google_sign_in plugin but Firebase Auth actually succeeds
       final errorStr = e.toString();
-      if (errorStr.contains('PigeonUserDetails') || errorStr.contains('List<Object?>')) {
-        if (kDebugMode) {
-          print('Caught PigeonUserDetails error, checking if Firebase Auth succeeded...');
-        }
-        
-        // Wait a moment for Firebase Auth to complete
-        await Future.delayed(const Duration(milliseconds: 500));
-        
-        // Check if user is actually signed in to Firebase
-        await _firebaseAuth!.currentUser?.reload();
-        final currentUser = _firebaseAuth!.currentUser;
-        if (currentUser != null) {
-          if (kDebugMode) {
-            print('Firebase Auth succeeded despite google_sign_in error: ${currentUser.email}');
-          }
-          // Since we can't create UserCredential directly, we'll sign in again with the credential
-          // This should work because the user is already authenticated
-          try {
-            final googleUser = await _googleSignInInstance!.signInSilently();
-            if (googleUser != null) {
-              final googleAuth = await googleUser.authentication;
-              final credential = GoogleAuthProvider.credential(
-                accessToken: googleAuth.accessToken,
-                idToken: googleAuth.idToken,
-              );
-              // This time it should work since the user is already signed in
-              return await _firebaseAuth!.signInWithCredential(credential);
-            }
-          } catch (silentSignInError) {
-            if (kDebugMode) {
-              print('Silent sign-in also failed, but user is authenticated: $silentSignInError');
-            }
-            // User is authenticated, just return null to indicate success
-            // The calling code should check _firebaseAuth.currentUser
-            return null;
-          }
-        }
-      }
-      
-      // Check for common Google Sign-In errors
       if (errorStr.contains('apiexception: 10')) {
         throw 'Google Sign-In configuration error. Check SHA-1 fingerprint in Firebase Console.';
       } else if (errorStr.contains('apiexception: 12500')) {

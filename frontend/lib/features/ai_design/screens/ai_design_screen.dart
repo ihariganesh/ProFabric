@@ -62,7 +62,7 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                   // Header
                   Container(
                     decoration: BoxDecoration(
-                      color: Color(0xFF101D22).withOpacity(0.8),
+                      color: const Color(0xFF101D22).withOpacity(0.8),
                       border: Border(
                         bottom: BorderSide(
                           color: Colors.white.withOpacity(0.05),
@@ -175,7 +175,7 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 8,
-                        shadowColor: Color(0xFF12AEE2).withOpacity(0.2),
+                        shadowColor: const Color(0xFF12AEE2).withOpacity(0.2),
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -499,7 +499,7 @@ class _AIDesignScreenState extends State<AIDesignScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Color(0xFF101D22).withOpacity(0),
+                        const Color(0xFF101D22).withOpacity(0),
                         const Color(0xFF101D22),
                         const Color(0xFF101D22),
                       ],

@@ -139,7 +139,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       padding: const EdgeInsets.all(16),
       itemCount: 10,
       itemBuilder: (context, index) {
-        final roles = UserRole.values;
+        const roles = UserRole.values;
         final role = roles[index % roles.length];
         return ListTile(
           leading: CircleAvatar(

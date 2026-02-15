@@ -862,7 +862,7 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Color(0xFF12AEE2).withOpacity(0.1),
+                color: const Color(0xFF12AEE2).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -950,7 +950,7 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color:
-            selected ? Color(0xFF12AEE2).withOpacity(0.2) : Colors.white.withOpacity(0.05),
+            selected ? const Color(0xFF12AEE2).withOpacity(0.2) : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: selected

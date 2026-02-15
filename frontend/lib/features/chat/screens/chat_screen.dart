@@ -50,7 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Color(0xFF12AEE2).withOpacity(0.2),
+              backgroundColor: const Color(0xFF12AEE2).withOpacity(0.2),
               child: Text(
                 widget.recipientName[0],
                 style: const TextStyle(color: Color(0xFF12AEE2), fontWeight: FontWeight.bold),
@@ -100,7 +100,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      color: Color(0xFF12AEE2).withOpacity(0.1),
+      color: const Color(0xFF12AEE2).withOpacity(0.1),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

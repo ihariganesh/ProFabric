@@ -10,7 +10,7 @@ plugins {
 android {
     namespace = "com.example.fabricflow"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "25.2.9519653"
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

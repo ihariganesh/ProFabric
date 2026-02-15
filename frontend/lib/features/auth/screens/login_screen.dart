@@ -123,13 +123,20 @@ class _LoginScreenState extends State<LoginScreen> {
       
       final userCredential = await _authService.signInWithGoogle();
 
-      if (userCredential != null && mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        // User canceled the sign-in
-        setState(() {
-          _isLoading = false;
-        });
+      if (mounted) {
+        if (userCredential != null) {
+          // Normal sign-in succeeded
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else if (_authService.currentUser != null) {
+          // PigeonUserDetails workaround: signInWithGoogle returned null 
+          // but Firebase Auth succeeded — navigate to home
+          Navigator.of(context).pushReplacementNamed('/home');
+        } else {
+          // User canceled the sign-in
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -330,7 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Color(0xFF12AEE2).withOpacity(0.2)
+              ? const Color(0xFF12AEE2).withOpacity(0.2)
               : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -563,10 +570,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color(0xFF12AEE2).withOpacity(0.1),
+                              color: const Color(0xFF12AEE2).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Color(0xFF12AEE2).withOpacity(0.3),
+                                color: const Color(0xFF12AEE2).withOpacity(0.3),
                               ),
                             ),
                             child: Row(
@@ -590,7 +597,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     'Change',
                                     style: TextStyle(
-                                      color: Color(0xFF12AEE2).withOpacity(0.8),
+                                      color: const Color(0xFF12AEE2).withOpacity(0.8),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -928,13 +935,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               backgroundColor: const Color(0xFF12AEE2),
                               foregroundColor: const Color(0xFF101D22),
                               disabledBackgroundColor:
-                                  Color(0xFF12AEE2).withOpacity(0.5),
+                                  const Color(0xFF12AEE2).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 8,
                               shadowColor:
-                                  Color(0xFF12AEE2).withOpacity(0.3),
+                                  const Color(0xFF12AEE2).withOpacity(0.3),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -1108,12 +1115,12 @@ class _RoleCard extends StatelessWidget {
         height: 130,
         decoration: BoxDecoration(
           color: isSelected
-              ? Color(0xFF12AEE2).withOpacity(0.1)
+              ? const Color(0xFF12AEE2).withOpacity(0.1)
               : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? Color(0xFF12AEE2).withOpacity(0.4)
+                ? const Color(0xFF12AEE2).withOpacity(0.4)
                 : Colors.white.withOpacity(0.1),
             width: 1,
           ),
@@ -1132,7 +1139,7 @@ class _RoleCard extends StatelessWidget {
                     height: 32,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Color(0xFF12AEE2).withOpacity(0.2)
+                          ? const Color(0xFF12AEE2).withOpacity(0.2)
                           : Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
