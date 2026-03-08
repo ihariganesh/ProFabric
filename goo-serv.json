@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "890157386194",
+    "project_id": "fabricflow-lh44",
+    "storage_bucket": "fabricflow-lh44.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:890157386194:android:9dad1fdeb364a69829a00b",
+        "android_client_info": {
+          "package_name": "com.example.fabricflow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "890157386194-9ollorip0r3p7avc4vob2g106j9j2iij.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fabricflow",
+            "certificate_hash": "a009b6910d30c36f1b956a9233994e409395bda9"
+          }
+        },
+        {
+          "client_id": "890157386194-n5nop8973hrig4m3neuinn68b2jpj37o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_r3aQVpoICQtg-T_6lLjQRFfm53E3oR8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "890157386194-n5nop8973hrig4m3neuinn68b2jpj37o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

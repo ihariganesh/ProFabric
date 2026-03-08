@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
+import 'core/services/settings_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,9 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
 
+  // Initialize persistent settings
+  await SettingsService.instance.init();
+
   runApp(const ProviderScope(child: FabricFlowApp()));
 }
 
@@ -31,14 +35,17 @@ class FabricFlowApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
-      title: 'FabricFlow',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
-      initialRoute: AppRouter.splash,
-      onGenerateRoute: AppRouter.generateRoute,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: SettingsService.instance.themeNotifier,
+      builder: (_, themeMode, __) => MaterialApp(
+        title: 'FabricFlow',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        initialRoute: AppRouter.splash,
+        onGenerateRoute: AppRouter.generateRoute,
+      ),
     );
   }
 }

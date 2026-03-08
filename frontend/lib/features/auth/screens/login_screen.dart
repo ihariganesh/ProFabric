@@ -1,8 +1,8 @@
-
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/user_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
   final _authService = AuthService();
+  final _userService = UserService();
 
   // Supply Partner sub-roles mapping to backend roles
   static const Map<String, String> supplyPartnerSubRoles = {
@@ -56,25 +57,52 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Check if Firebase is supported on this platform
       final bool isFirebaseSupported = !(!kIsWeb && Platform.isLinux);
-      
+
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms (e.g., Linux)
         if (kDebugMode) {
           print('Bypassing authentication on unsupported platform');
         }
-        // Navigate to home without authentication
+        // Navigate to role-based dashboard without authentication
         if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/home');
+          _navigateToRoleDashboard();
         }
         return;
       }
-      
+
       if (authMode == 'signin') {
         // Sign in with email and password
         await _authService.signInWithEmailPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+        // Role enforcement: block sign-in if account was registered under a different role
+        final uid = _authService.currentUser?.uid;
+        if (uid != null) {
+          final storedRole = await _authService.getUserRole(uid);
+          final effectiveRole = _effectiveRoleString();
+          // Allow old 'supply_partner' records to sign in (pre-fix migration)
+          final isLegacySupplyPartner = storedRole == 'supply_partner';
+          if (storedRole != null &&
+              !isLegacySupplyPartner &&
+              storedRole != effectiveRole) {
+            await _authService.signOut();
+            throw 'This account is registered as "${_roleLabel(storedRole)}". '
+                'Please select the correct role to sign in.';
+          }
+          // Save role to SharedPreferences (fast, must await for enforcement)
+          final u = _authService.currentUser;
+          await _authService.saveUserRole(uid, effectiveRole);
+          // Save to Firestore in background — don't block navigation
+          _userService
+              .saveUserRole(
+                userId: uid,
+                email: u?.email ?? _emailController.text.trim(),
+                role: effectiveRole,
+                displayName: u?.displayName ?? _nameController.text.trim(),
+              )
+              .ignore();
+        }
       } else {
         // Sign up with email and password
         await _authService.signUpWithEmailPassword(
@@ -82,10 +110,27 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
         );
+        // Persist role
+        final uid = _authService.currentUser?.uid;
+        if (uid != null) {
+          final effectiveRole = _effectiveRoleString();
+          final u = _authService.currentUser;
+          // SharedPreferences must be awaited (needed for role enforcement)
+          await _authService.saveUserRole(uid, effectiveRole);
+          // Firestore in background — don't block navigation
+          _userService
+              .saveUserRole(
+                userId: uid,
+                email: u?.email ?? _emailController.text.trim(),
+                role: effectiveRole,
+                displayName: u?.displayName ?? _nameController.text.trim(),
+              )
+              .ignore();
+        }
       }
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        _navigateToRoleDashboard();
       }
     } catch (e) {
       if (mounted) {
@@ -95,6 +140,46 @@ class _LoginScreenState extends State<LoginScreen> {
         _showErrorDialog(e.toString());
       }
     }
+  }
+
+  /// Returns the real UserRole string based on selectedRole and selectedSubRole.
+  /// For supply_partner, maps the chosen sub-role to its UserRole key.
+  String _effectiveRoleString() {
+    if (selectedRole == 'supply_partner') {
+      const Map<String, String> subRoleMap = {
+        'yarn': 'yarnManufacturer',
+        'weaver': 'weaver',
+        'fabric': 'fabricSeller',
+        'printing': 'printingUnit',
+        'stitching': 'stitchingUnit',
+        'logistics': 'logistics',
+      };
+      return subRoleMap[selectedSubRole] ?? 'fabricSeller';
+    }
+    return selectedRole;
+  }
+
+  /// Navigate based on selected role
+  void _navigateToRoleDashboard() {
+    final effectiveRole = _effectiveRoleString();
+    final user = _authService.currentUser;
+    final userName = _nameController.text.trim().isNotEmpty
+        ? _nameController.text.trim()
+        : (user?.displayName?.isNotEmpty == true
+            ? user!.displayName!
+            : user?.email?.split('@').first ?? 'User');
+    final userEmail = _emailController.text.trim().isNotEmpty
+        ? _emailController.text.trim()
+        : (user?.email ?? '');
+    final route = effectiveRole == 'buyer' ? '/buyer-dashboard' : '/dashboard';
+    Navigator.of(context).pushReplacementNamed(
+      route,
+      arguments: {
+        'role': effectiveRole,
+        'userName': userName,
+        'userEmail': userEmail,
+      },
+    );
   }
 
   void _handleGoogleSignIn() async {
@@ -105,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       // Check if Firebase is supported on this platform
       final bool isFirebaseSupported = !(!kIsWeb && Platform.isLinux);
-      
+
       if (!isFirebaseSupported) {
         // Bypass authentication on unsupported platforms
         if (kDebugMode) {
@@ -115,21 +200,58 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() {
             _isLoading = false;
           });
-          // Navigate directly without showing error
-          Navigator.of(context).pushReplacementNamed('/home');
+          // Navigate to role-based dashboard
+          _navigateToRoleDashboard();
         }
         return;
       }
-      
-      final userCredential = await _authService.signInWithGoogle();
 
-      if (userCredential != null && mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      } else {
-        // User canceled the sign-in
-        setState(() {
-          _isLoading = false;
-        });
+      final userCredential = await _authService.signInWithGoogle();
+      final currentUser = _authService.currentUser;
+
+      if (mounted) {
+        if (userCredential != null || currentUser != null) {
+          // Role enforcement for Google sign-in
+          final uid = currentUser?.uid;
+          if (uid != null) {
+            // Only await the fast SharedPreferences read (needed for enforcement)
+            final storedRole = await _authService.getUserRole(uid);
+            final effectiveRole = _effectiveRoleString();
+            final isLegacySupplyPartner = storedRole == 'supply_partner';
+            if (storedRole != null &&
+                !isLegacySupplyPartner &&
+                storedRole != effectiveRole) {
+              await _authService.signOut();
+              if (mounted) {
+                setState(() => _isLoading = false);
+                _showErrorDialog(
+                  'This Google account is registered as "${_roleLabel(storedRole)}". '
+                  'Please select the correct role.',
+                );
+              }
+              return;
+            }
+            // Navigate immediately — save roles in background (don't block UI)
+            _navigateToRoleDashboard();
+            // Fire-and-forget: persist role to SharedPreferences + Firestore
+            _authService.saveUserRole(uid, effectiveRole).ignore();
+            _userService
+                .saveUserRole(
+                  userId: uid,
+                  email: currentUser?.email ?? '',
+                  role: effectiveRole,
+                  displayName: currentUser?.displayName ?? '',
+                )
+                .ignore();
+          } else {
+            _navigateToRoleDashboard();
+          }
+        } else {
+          // User canceled the sign-in
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -141,16 +263,46 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Human-readable label for a role key.
+  String _roleLabel(String role) {
+    switch (role) {
+      case 'buyer':
+        return 'Buyer';
+      case 'textile':
+        return 'Textile Orchestrator';
+      case 'supply_partner':
+        return 'Supply Partner';
+      case 'fabricSeller':
+        return 'Fabric Seller';
+      case 'weaver':
+        return 'Weaver';
+      case 'yarnManufacturer':
+        return 'Yarn Manufacturer';
+      case 'printingUnit':
+        return 'Printing Unit';
+      case 'stitchingUnit':
+        return 'Stitching Unit';
+      case 'logistics':
+        return 'Logistics Provider';
+      case 'admin':
+        return 'Admin';
+      default:
+        return role.isNotEmpty
+            ? '${role[0].toUpperCase()}${role.substring(1)}'
+            : role;
+    }
+  }
+
   void _showErrorDialog(String message) {
     // Check if it's a Firebase configuration error
     final isConfigError = message.contains('API key not valid') ||
         message.contains('CONFIGURATION_NOT_FOUND') ||
         message.contains('internal error');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E2D33),
+        backgroundColor: const Color(0xFF1C2333),
         title: Text(
           isConfigError ? 'Firebase Not Configured' : 'Authentication Error',
           style: const TextStyle(color: Colors.white),
@@ -160,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isConfigError 
+              isConfigError
                   ? 'Firebase is not configured. Would you like to continue in demo mode?'
                   : message,
               style: const TextStyle(color: Colors.white70),
@@ -193,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: const Text(
                 'Demo Mode',
-                style: TextStyle(color: Color(0xFF12AEE2)),
+                style: TextStyle(color: Color(0xFF3B82F6)),
               ),
             )
           else
@@ -201,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
                 'OK',
-                style: TextStyle(color: Color(0xFF12AEE2)),
+                style: TextStyle(color: Color(0xFF3B82F6)),
               ),
             ),
         ],
@@ -217,7 +369,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFF1E2D33),
+          color: Color(0xFF1C2333),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -257,9 +409,11 @@ class _LoginScreenState extends State<LoginScreen> {
               'RAW MATERIALS',
               Icons.inventory_2_outlined,
               [
-                _SubRoleOption('yarn', 'Yarn Manufacturer', 'Produce & sell yarn'),
+                _SubRoleOption(
+                    'yarn', 'Yarn Manufacturer', 'Produce & sell yarn'),
                 _SubRoleOption('weaver', 'Weaver', 'Produce fabric from yarn'),
-                _SubRoleOption('fabric', 'Fabric Seller', 'Sell fabric to textiles'),
+                _SubRoleOption(
+                    'fabric', 'Fabric Seller', 'Sell fabric to textiles'),
               ],
             ),
             const SizedBox(height: 16),
@@ -268,8 +422,10 @@ class _LoginScreenState extends State<LoginScreen> {
               'PROCESSING',
               Icons.precision_manufacturing_outlined,
               [
-                _SubRoleOption('printing', 'Printing Unit', 'Fabric printing & dyeing'),
-                _SubRoleOption('stitching', 'Stitching Unit', 'Stitch & package products'),
+                _SubRoleOption(
+                    'printing', 'Printing Unit', 'Fabric printing & dyeing'),
+                _SubRoleOption(
+                    'stitching', 'Stitching Unit', 'Stitch & package products'),
               ],
             ),
             const SizedBox(height: 16),
@@ -278,7 +434,8 @@ class _LoginScreenState extends State<LoginScreen> {
               'LOGISTICS',
               Icons.local_shipping_outlined,
               [
-                _SubRoleOption('logistics', 'Logistics Provider', 'Transport & delivery'),
+                _SubRoleOption(
+                    'logistics', 'Logistics Provider', 'Transport & delivery'),
               ],
             ),
             const SizedBox(height: 24),
@@ -288,20 +445,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSubRoleSection(String title, IconData sectionIcon, List<_SubRoleOption> options) {
+  Widget _buildSubRoleSection(
+      String title, IconData sectionIcon, List<_SubRoleOption> options) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(sectionIcon, color: const Color(0xFF12AEE2), size: 16),
+            Icon(sectionIcon, color: const Color(0xFF3B82F6), size: 16),
             const SizedBox(width: 8),
             Text(
               title,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF12AEE2),
+                color: Color(0xFF3B82F6),
                 letterSpacing: 1,
               ),
             ),
@@ -330,12 +488,12 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? Color(0xFF12AEE2).withOpacity(0.2)
+              ? const Color(0xFF3B82F6).withOpacity(0.2)
               : Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF12AEE2)
+                ? const Color(0xFF3B82F6)
                 : Colors.white.withOpacity(0.1),
           ),
         ),
@@ -347,7 +505,7 @@ class _LoginScreenState extends State<LoginScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? const Color(0xFF12AEE2) : Colors.white,
+                color: isSelected ? const Color(0xFF3B82F6) : Colors.white,
               ),
             ),
             const SizedBox(height: 2),
@@ -367,14 +525,14 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101D22),
+      backgroundColor: const Color(0xFF0A0F1A),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF101D22),
+              Color(0xFF0A0F1A),
               Color(0xFF0D1619),
             ],
           ),
@@ -412,7 +570,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF12AEE2),
+                                  color: const Color(0xFF3B82F6),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
@@ -482,7 +640,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF12AEE2),
+                          color: Color(0xFF3B82F6),
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -557,23 +715,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       // Show selected sub-role if Supply Partner
-                      if (selectedRole == 'supply_partner' && selectedSubRole != null)
+                      if (selectedRole == 'supply_partner' &&
+                          selectedSubRole != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             decoration: BoxDecoration(
-                              color: Color(0xFF12AEE2).withOpacity(0.1),
+                              color: const Color(0xFF3B82F6).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Color(0xFF12AEE2).withOpacity(0.3),
+                                color: const Color(0xFF3B82F6).withOpacity(0.3),
                               ),
                             ),
                             child: Row(
                               children: [
                                 const Icon(
                                   Icons.check_circle,
-                                  color: Color(0xFF12AEE2),
+                                  color: Color(0xFF3B82F6),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
@@ -590,7 +750,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: Text(
                                     'Change',
                                     style: TextStyle(
-                                      color: Color(0xFF12AEE2).withOpacity(0.8),
+                                      color: const Color(0xFF3B82F6)
+                                          .withOpacity(0.8),
                                       fontSize: 12,
                                     ),
                                   ),
@@ -649,7 +810,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF12AEE2),
+                                  color: Color(0xFF3B82F6),
                                   width: 2,
                                 ),
                               ),
@@ -681,7 +842,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                                                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                                 .hasMatch(value)) {
                               return 'Please enter a valid email';
                             }
@@ -713,7 +874,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF12AEE2),
+                                color: Color(0xFF3B82F6),
                                 width: 2,
                               ),
                             ),
@@ -775,7 +936,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: const BorderSide(
-                                color: Color(0xFF12AEE2),
+                                color: Color(0xFF3B82F6),
                                 width: 2,
                               ),
                             ),
@@ -851,7 +1012,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFF12AEE2),
+                                  color: Color(0xFF3B82F6),
                                   width: 2,
                                 ),
                               ),
@@ -900,7 +1061,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     content: Text(
                                       'Password reset link sent to your email',
                                     ),
-                                    backgroundColor: Color(0xFF12AEE2),
+                                    backgroundColor: Color(0xFF3B82F6),
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
@@ -908,7 +1069,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: const Text(
                                 'Forgot password?',
                                 style: TextStyle(
-                                  color: Color(0xFF12AEE2),
+                                  color: Color(0xFF3B82F6),
                                   fontSize: 14,
                                 ),
                               ),
@@ -925,16 +1086,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleAuth,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF12AEE2),
-                              foregroundColor: const Color(0xFF101D22),
+                              backgroundColor: const Color(0xFF3B82F6),
+                              foregroundColor: const Color(0xFF0A0F1A),
                               disabledBackgroundColor:
-                                  Color(0xFF12AEE2).withOpacity(0.5),
+                                  const Color(0xFF3B82F6).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 8,
                               shadowColor:
-                                  Color(0xFF12AEE2).withOpacity(0.3),
+                                  const Color(0xFF3B82F6).withOpacity(0.3),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -943,7 +1104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFF101D22),
+                                        Color(0xFF0A0F1A),
                                       ),
                                     ),
                                   )
@@ -1063,7 +1224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 authMode == 'signin' ? 'Sign Up' : 'Sign In',
                                 style: const TextStyle(
-                                  color: Color(0xFF12AEE2),
+                                  color: Color(0xFF3B82F6),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -1108,12 +1269,12 @@ class _RoleCard extends StatelessWidget {
         height: 130,
         decoration: BoxDecoration(
           color: isSelected
-              ? Color(0xFF12AEE2).withOpacity(0.1)
+              ? const Color(0xFF3B82F6).withOpacity(0.1)
               : Colors.white.withOpacity(0.03),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? Color(0xFF12AEE2).withOpacity(0.4)
+                ? const Color(0xFF3B82F6).withOpacity(0.4)
                 : Colors.white.withOpacity(0.1),
             width: 1,
           ),
@@ -1132,14 +1293,14 @@ class _RoleCard extends StatelessWidget {
                     height: 32,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Color(0xFF12AEE2).withOpacity(0.2)
+                          ? const Color(0xFF3B82F6).withOpacity(0.2)
                           : Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       icon,
                       color: isSelected
-                          ? const Color(0xFF12AEE2)
+                          ? const Color(0xFF3B82F6)
                           : Colors.white.withOpacity(0.6),
                       size: 16,
                     ),
@@ -1174,7 +1335,7 @@ class _RoleCard extends StatelessWidget {
                 right: 12,
                 child: Icon(
                   Icons.check_circle,
-                  color: Color(0xFF12AEE2),
+                  color: Color(0xFF3B82F6),
                   size: 20,
                 ),
               ),

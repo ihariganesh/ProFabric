@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/auth_service.dart';
 
-/// Dashboard screen for Buyers
-/// Allows buyers to view their orders, create new orders, and track shipments
+/// Buyer Dashboard – the landing tab.
+/// Shows greeting, quick-action cards (Design Studio / Upload Sample),
+/// active order summary, and recent textile matches.
 class BuyerDashboardScreen extends StatefulWidget {
   const BuyerDashboardScreen({super.key});
 
@@ -10,837 +11,649 @@ class BuyerDashboardScreen extends StatefulWidget {
   State<BuyerDashboardScreen> createState() => _BuyerDashboardScreenState();
 }
 
-class _BuyerDashboardScreenState extends State<BuyerDashboardScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final _authService = AuthService();
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101D22),
+      backgroundColor: const Color(0xFF0B1215),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(),
-            _buildQuickStats(),
-            _buildTabBar(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildActiveOrdersTab(),
-                  _buildBiddingTab(),
-                  _buildDeliveredTab(),
-                  _buildSavedDesignsTab(),
-                ],
-              ),
-            ),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _greeting()),
+            SliverToBoxAdapter(child: _quickStats()),
+            SliverToBoxAdapter(child: _createOrderSection()),
+            SliverToBoxAdapter(child: _recentMatches()),
+            SliverToBoxAdapter(child: _activeOrders()),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/create-order'),
-        backgroundColor: const Color(0xFF00C853),
-        icon: const Icon(Icons.add),
-        label: const Text('New Order'),
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    final user = _authService.currentUser;
-    return Container(
-      padding: const EdgeInsets.all(16),
+  // ─── Greeting ───────────────────────────────────────────────────────
+  Widget _greeting() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: user?.photoURL != null 
-                ? NetworkImage(user!.photoURL!) 
-                : null,
-            backgroundColor: const Color(0xFF00C853),
-            child: user?.photoURL == null 
-                ? Text((user?.displayName ?? 'B')[0].toUpperCase(),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold))
-                : null,
+          GestureDetector(
+            onTap: () => _showProfileSheet(),
+            child: Builder(builder: (_) {
+              final user = AuthService().currentUser;
+              final name = (user?.displayName?.isNotEmpty == true)
+                  ? user!.displayName!
+                  : (user?.email?.split('@').first ?? 'User');
+              final initials = name.isNotEmpty ? name[0].toUpperCase() : 'B';
+              final photoURL = user?.photoURL;
+              return Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: photoURL == null
+                      ? const LinearGradient(
+                          colors: [Color(0xFF6C63FF), Color(0xFF3F8CFF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  borderRadius: BorderRadius.circular(16),
+                  image: photoURL != null
+                      ? DecorationImage(
+                          image: NetworkImage(photoURL),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: photoURL == null
+                    ? Center(
+                        child: Text(initials,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold)),
+                      )
+                    : null,
+              );
+            }),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Welcome back,',
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-                Text(
-                  user?.displayName ?? 'Buyer',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text('Good Morning 👋',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 13)),
+                const SizedBox(height: 3),
+                const Text('Find Your Perfect Fabric',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3)),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () =>
-                Navigator.pushNamed(context, '/notifications'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-            onPressed: () =>
-                Navigator.pushNamed(context, '/marketplace'),
-          ),
+          _iconBtn(Icons.notifications_none_rounded, badge: true, onTap: () {
+            Navigator.pushNamed(context, '/notifications');
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildQuickStats() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          _buildStatCard(
-            icon: Icons.pending_actions,
-            label: 'Pending',
-            value: '5',
-            color: Colors.orange,
-          ),
-          const SizedBox(width: 12),
-          _buildStatCard(
-            icon: Icons.gavel,
-            label: 'Bidding',
-            value: '3',
-            color: Colors.blue,
-          ),
-          const SizedBox(width: 12),
-          _buildStatCard(
-            icon: Icons.local_shipping,
-            label: 'In Transit',
-            value: '2',
-            color: Colors.purple,
-          ),
-          const SizedBox(width: 12),
-          _buildStatCard(
-            icon: Icons.check_circle,
-            label: 'Completed',
-            value: '18',
-            color: const Color(0xFF00C853),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Expanded(
+  Widget _iconBtn(IconData icon,
+      {bool badge = false, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                color: color,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Icon(icon, color: Colors.white60, size: 22),
+            if (badge)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                      color: Color(0xFF6C63FF), shape: BoxShape.circle),
+                ),
               ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white54, fontSize: 10),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: const Color(0xFF00C853),
-          borderRadius: BorderRadius.circular(12),
+  // ─── Profile / Settings Bottom Sheet ─────────────────────────────────
+  void _showProfileSheet() {
+    final authService = AuthService();
+    final user = authService.currentUser;
+    final displayName = (user?.displayName?.isNotEmpty == true)
+        ? user!.displayName!
+        : (user?.email?.split('@').first ?? 'Buyer');
+    final email = user?.email ?? '';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'B';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF111D23),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.white54,
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(text: 'Active'),
-          Tab(text: 'Bidding'),
-          Tab(text: 'Delivered'),
-          Tab(text: 'Designs'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActiveOrdersTab() {
-    final activeOrders = [
-      _MockOrder(
-        id: 'FB-8921',
-        fabric: 'Cotton Floral Print',
-        status: 'In Production',
-        statusColor: Colors.blue,
-        progress: 0.65,
-        quantity: '500 meters',
-        eta: '15 Jan 2026',
-      ),
-      _MockOrder(
-        id: 'FB-8918',
-        fabric: 'Silk Paisley',
-        status: 'Quality Check',
-        statusColor: Colors.orange,
-        progress: 0.85,
-        quantity: '200 meters',
-        eta: '10 Jan 2026',
-      ),
-      _MockOrder(
-        id: 'FB-8912',
-        fabric: 'Denim Solid',
-        status: 'Printing',
-        statusColor: Colors.purple,
-        progress: 0.45,
-        quantity: '1000 meters',
-        eta: '25 Jan 2026',
-      ),
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: activeOrders.length,
-      itemBuilder: (context, index) {
-        final order = activeOrders[index];
-        return _buildActiveOrderCard(order);
-      },
-    );
-  }
-
-  Widget _buildActiveOrderCard(_MockOrder order) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                        'https://picsum.photos/seed/fabric/100/100'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '#${order.id}',
-                          style: const TextStyle(
-                            color: Color(0xFF00C853),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: order.statusColor.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            order.status,
-                            style: TextStyle(
-                              color: order.statusColor,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      order.fabric,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${order.quantity} • ETA: ${order.eta}',
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Progress: ${(order.progress * 100).toInt()}%',
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: order.progress,
-                      backgroundColor: Colors.white.withOpacity(0.1),
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(order.statusColor),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              OutlinedButton(
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  '/order-tracking',
-                  arguments: {'orderId': order.id},
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF00C853),
-                  side: const BorderSide(color: Color(0xFF00C853)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: const Text('Track'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBiddingTab() {
-    final biddingOrders = [
-      _BiddingOrder(
-        id: 'FB-8930',
-        fabric: 'Linen Geometric',
-        quantity: '800 meters',
-        bidCount: 5,
-        lowestBid: 28000,
-        timeLeft: '2h 30m',
-      ),
-      _BiddingOrder(
-        id: 'FB-8928',
-        fabric: 'Cotton Abstract',
-        quantity: '300 meters',
-        bidCount: 3,
-        lowestBid: 12500,
-        timeLeft: '5h 15m',
-      ),
-    ];
-
-    if (biddingOrders.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.gavel,
-        title: 'No Active Bids',
-        subtitle: 'Create a new order to receive bids from vendors',
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: biddingOrders.length,
-      itemBuilder: (context, index) {
-        final order = biddingOrders[index];
-        return _buildBiddingCard(order);
-      },
-    );
-  }
-
-  Widget _buildBiddingCard(_BiddingOrder order) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.blue.withOpacity(0.1),
-            Colors.purple.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '#${order.id}',
-                style: const TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.timer, color: Colors.orange, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      order.timeLeft,
-                      style: const TextStyle(
-                        color: Colors.orange,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            order.fabric,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
             ),
-          ),
-          Text(
-            order.quantity,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildBidStat(Icons.people, '${order.bidCount} Bids'),
-              const SizedBox(width: 16),
-              _buildBidStat(Icons.attach_money, '₹${order.lowestBid}',
-                  isHighlight: true),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, '/vendor-bidding'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    side: const BorderSide(color: Colors.blue),
-                  ),
-                  child: const Text('View Bids'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00C853),
-                  ),
-                  child: const Text('Accept Best'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildBidStat(IconData icon, String text, {bool isHighlight = false}) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: isHighlight ? const Color(0xFF00C853) : Colors.white54,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            color: isHighlight ? const Color(0xFF00C853) : Colors.white54,
-            fontWeight: isHighlight ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDeliveredTab() {
-    final deliveredOrders = [
-      _MockOrder(
-        id: 'FB-8900',
-        fabric: 'Velvet Embroidered',
-        status: 'Delivered',
-        statusColor: const Color(0xFF00C853),
-        progress: 1.0,
-        quantity: '150 meters',
-        eta: '28 Dec 2025',
-      ),
-      _MockOrder(
-        id: 'FB-8885',
-        fabric: 'Rayon Printed',
-        status: 'Delivered',
-        statusColor: const Color(0xFF00C853),
-        progress: 1.0,
-        quantity: '600 meters',
-        eta: '20 Dec 2025',
-      ),
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: deliveredOrders.length,
-      itemBuilder: (context, index) {
-        final order = deliveredOrders[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Color(0xFF00C853).withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                        'https://picsum.photos/seed/fabric2/100/100'),
-                    fit: BoxFit.cover,
-                  ),
+            // Profile header
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF3F8CFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '#${order.id}',
-                      style: const TextStyle(
-                        color: Color(0xFF00C853),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      order.fabric,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      'Delivered on ${order.eta}',
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.star_border, color: Colors.amber),
-                    onPressed: () => _showRatingDialog(),
-                  ),
-                  const Text(
-                    'Rate',
-                    style: TextStyle(color: Colors.white54, fontSize: 10),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSavedDesignsTab() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    image: DecorationImage(
-                      image: NetworkImage(
-                          'https://picsum.photos/seed/design$index/200/200'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Icon(Icons.auto_awesome,
-                              color: Colors.amber, size: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Design ${index + 1}',
-                      style: const TextStyle(
+              child: Center(
+                child: Text(initial,
+                    style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Created ${index + 1} days ago',
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                  ],
-                ),
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold)),
               ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: Colors.white24),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white54),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRatingDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A2A30),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Rate Your Experience',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    index < 4 ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 32,
-                  ),
-                  onPressed: () {},
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              maxLines: 3,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Share your feedback...',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+            const SizedBox(height: 14),
+            Text(displayName,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(email,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4), fontSize: 13)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C63FF).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
               ),
+              child: const Text('Buyer',
+                  style: TextStyle(
+                      color: Color(0xFF6C63FF),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
+            ),
+
+            const SizedBox(height: 24),
+            Container(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 8),
+
+            // Menu items
+            _profileMenuItem(
+              icon: Icons.person_outline_rounded,
+              title: 'Profile Settings',
+              subtitle: 'Edit name, photo & preferences',
+              color: const Color(0xFF6C63FF),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/profile-settings');
+              },
+            ),
+            _profileMenuItem(
+              icon: Icons.settings_rounded,
+              title: 'App Settings',
+              subtitle: 'Theme, language & notifications',
+              color: const Color(0xFF3F8CFF),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/app-settings');
+              },
+            ),
+            _profileMenuItem(
+              icon: Icons.receipt_long_rounded,
+              title: 'My Orders',
+              subtitle: 'View all orders & history',
+              color: const Color(0xFF00C896),
+              onTap: () {
+                Navigator.pop(context);
+                // Switch to Orders tab - find parent BuyerHomeScreen
+              },
+            ),
+            _profileMenuItem(
+              icon: Icons.help_outline_rounded,
+              title: 'Help & Support',
+              subtitle: 'FAQs, contact us',
+              color: const Color(0xFFFFB74D),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/help-support');
+              },
+            ),
+            _profileMenuItem(
+              icon: Icons.info_outline_rounded,
+              title: 'About FabricFlow',
+              subtitle: 'Version 1.0.0',
+              color: Colors.white38,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/about');
+              },
+            ),
+
+            const SizedBox(height: 8),
+            Container(
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.06),
+            ),
+            const SizedBox(height: 8),
+
+            // Logout
+            _profileMenuItem(
+              icon: Icons.logout_rounded,
+              title: 'Logout',
+              subtitle: 'Sign out of your account',
+              color: const Color(0xFFEF5350),
+              onTap: () => _confirmLogout(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _profileMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                            color: color == const Color(0xFFEF5350)
+                                ? color
+                                : Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            fontSize: 12)),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: Colors.white.withValues(alpha: 0.15), size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmLogout() {
+    Navigator.pop(context); // close profile sheet
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A2930),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Logout',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700)),
+        content: Text('Are you sure you want to sign out?',
+            style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6), fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              Navigator.pop(context); // close dialog
+              final authService = AuthService();
+              await authService.signOut();
+              if (mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/login', (route) => false);
+              }
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00C853),
+              backgroundColor: const Color(0xFFEF5350),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             ),
-            child: const Text('Submit'),
+            child: const Text('Logout',
+                style: TextStyle(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
     );
   }
-}
 
-// Mock data classes
-class _MockOrder {
-  final String id;
-  final String fabric;
-  final String status;
-  final Color statusColor;
-  final double progress;
-  final String quantity;
-  final String eta;
+  // ─── Quick Stats Row ────────────────────────────────────────────────
+  Widget _quickStats() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+      child: Row(
+        children: [
+          _statCard('Pending\nRequests', '0', Icons.hourglass_top_rounded,
+              const Color(0xFF6C63FF)),
+          const SizedBox(width: 10),
+          _statCard('Matched\nTextiles', '0', Icons.handshake_rounded,
+              const Color(0xFF3F8CFF)),
+          const SizedBox(width: 10),
+          _statCard('Active\nOrders', '0', Icons.local_shipping_rounded,
+              const Color(0xFF00C896)),
+        ],
+      ),
+    );
+  }
 
-  _MockOrder({
-    required this.id,
-    required this.fabric,
-    required this.status,
-    required this.statusColor,
-    required this.progress,
-    required this.quantity,
-    required this.eta,
-  });
-}
+  Widget _statCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(height: 12),
+            Text(value,
+                style: TextStyle(
+                    color: color, fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 2),
+            Text(label,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                    height: 1.3)),
+          ],
+        ),
+      ),
+    );
+  }
 
-class _BiddingOrder {
-  final String id;
-  final String fabric;
-  final String quantity;
-  final int bidCount;
-  final int lowestBid;
-  final String timeLeft;
+  // ─── Create Order Section ───────────────────────────────────────────
+  Widget _createOrderSection() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Place a Fabric Request',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 6),
+          Text('Choose how you want to describe your fabric need',
+              style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4), fontSize: 13)),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _actionCard(
+                  title: 'Design Studio',
+                  sub: 'Create with AI tools',
+                  icon: Icons.palette_rounded,
+                  gradient: const [Color(0xFF6C63FF), Color(0xFF9B6CFF)],
+                  onTap: () => Navigator.pushNamed(context, '/ai-design'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _actionCard(
+                  title: 'Upload Sample',
+                  sub: 'Import image & details',
+                  icon: Icons.cloud_upload_rounded,
+                  gradient: const [Color(0xFF3F8CFF), Color(0xFF00C8FF)],
+                  onTap: () => Navigator.pushNamed(context, '/fabric-request'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  _BiddingOrder({
-    required this.id,
-    required this.fabric,
-    required this.quantity,
-    required this.bidCount,
-    required this.lowestBid,
-    required this.timeLeft,
-  });
+  Widget _actionCard({
+    required String title,
+    required String sub,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              gradient[0].withValues(alpha: 0.15),
+              gradient[1].withValues(alpha: 0.04)
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: gradient[0].withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 16),
+            Text(title,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 3),
+            Text(sub,
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45), fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Recent Textile Matches ─────────────────────────────────────────
+  Widget _recentMatches() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('Recent Textile Matches',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/ai-vendor-match'),
+                child: const Text('See All',
+                    style: TextStyle(color: Color(0xFF3F8CFF), fontSize: 13)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111D22),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.handshake_outlined,
+                    color: Colors.white.withValues(alpha: 0.12), size: 40),
+                const SizedBox(height: 10),
+                Text('No matches yet',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Create a fabric request to find matched textiles',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Active Orders ──────────────────────────────────────────────────
+  Widget _activeOrders() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Text('Active Orders',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700)),
+              const Spacer(),
+              const Text('View All',
+                  style: TextStyle(color: Color(0xFF3F8CFF), fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            decoration: BoxDecoration(
+              color: const Color(0xFF111D22),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.inventory_2_outlined,
+                    color: Colors.white.withValues(alpha: 0.12), size: 40),
+                const SizedBox(height: 10),
+                Text('No active orders',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Your placed orders will appear here',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

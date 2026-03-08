@@ -11,11 +11,16 @@ import '../../features/inventory/screens/my_inventory_screen.dart';
 import '../../features/vendor/screens/vendor_bidding_screen.dart';
 import '../../features/textile/screens/textile_dashboard_screen.dart';
 import '../../features/vendor/screens/vendor_dashboard_screen.dart';
-import '../../features/buyer/screens/buyer_dashboard_screen.dart';
+import '../../features/buyer/screens/buyer_home_screen.dart';
+import '../../features/buyer/screens/order_detail_screen.dart';
+import '../../features/buyer/screens/ai_vendor_match_screen.dart';
+import '../../features/buyer/screens/fabric_request_screen.dart';
+import '../../features/buyer/screens/buyer_order_tracking_screen.dart';
 import '../../features/payments/screens/payment_screen.dart';
 import '../../features/logistics/screens/logistics_dashboard_screen.dart';
 import '../../features/buyer/screens/vendor_selection_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
+import '../../features/chat/screens/chat_list_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
 import '../../features/settings/screens/settings_screens.dart';
 import '../constants/user_roles.dart';
@@ -52,6 +57,11 @@ class AppRouter {
   static const String helpSupport = '/help-support';
   static const String about = '/about';
   static const String sellFabric = '/sell-fabric';
+  static const String orderDetail = '/order-detail';
+  static const String aiVendorMatch = '/ai-vendor-match';
+  static const String chatList = '/chat-list';
+  static const String fabricRequest = '/fabric-request';
+  static const String buyerOrderTracking = '/buyer-order-tracking';
 
   // Generate Routes
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -83,11 +93,31 @@ class AppRouter {
             orderId: args?['orderId'] ?? 'FB-8921',
             recipientName: args?['recipientName'] ?? 'Vendor Hub',
             recipientRole: args?['recipientRole'] ?? 'Hub Orchestrator',
+            recipientId: args?['recipientId'],
+          ),
+        );
+
+      case chatList:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ChatListScreen(
+            userRole: args?['role'] ?? 'buyer',
           ),
         );
 
       case buyerDashboard:
-        return MaterialPageRoute(builder: (_) => const BuyerDashboardScreen());
+        return MaterialPageRoute(builder: (_) => const BuyerHomeScreen());
+
+      case orderDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(
+            orderId: args?['orderId'] ?? 'FB-0000',
+          ),
+        );
+
+      case aiVendorMatch:
+        return MaterialPageRoute(builder: (_) => const AIVendorMatchScreen());
 
       case payment:
         final args = settings.arguments as Map<String, dynamic>?;
@@ -103,9 +133,10 @@ class AppRouter {
         final args = settings.arguments as Map<String, dynamic>?;
         final authService = AuthService();
         final user = authService.currentUser;
-        
+
         final roleString = args?['role'] as String? ?? 'Buyer';
-        final userName = args?['userName'] as String? ?? user?.displayName ?? 'User';
+        final userName =
+            args?['userName'] as String? ?? user?.displayName ?? 'User';
         final userEmail = args?['userEmail'] as String? ?? user?.email ?? '';
         final role = UserRole.fromString(roleString);
 
@@ -143,7 +174,8 @@ class AppRouter {
         final user = authService.currentUser;
         return MaterialPageRoute(
           builder: (_) => LogisticsDashboardScreen(
-            userName: args?['userName'] ?? user?.displayName ?? 'Logistics User',
+            userName:
+                args?['userName'] ?? user?.displayName ?? 'Logistics User',
             userEmail: args?['userEmail'] ?? user?.email ?? '',
           ),
         );
@@ -203,6 +235,17 @@ class AppRouter {
       case sellFabric:
         return MaterialPageRoute(builder: (_) => const SellFabricScreen());
 
+      case fabricRequest:
+        return MaterialPageRoute(builder: (_) => const FabricRequestScreen());
+
+      case buyerOrderTracking:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => BuyerOrderTrackingScreen(
+            orderId: args?['orderId'] ?? 'FB-0000',
+          ),
+        );
+
       default:
         return MaterialPageRoute(
           builder: (_) =>
@@ -215,7 +258,7 @@ class AppRouter {
       UserRole role, String userName, String userEmail) {
     switch (role) {
       case UserRole.buyer:
-        return const BuyerDashboardScreen();
+        return const BuyerHomeScreen();
       case UserRole.textile:
         return TextileDashboardScreen(userName: userName, userEmail: userEmail);
       case UserRole.logistics:
@@ -251,12 +294,47 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Navigate to login screen after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppRouter.login);
-      }
-    });
+    _checkAuthAndRoute();
+  }
+
+  Future<void> _checkAuthAndRoute() async {
+    // Brief splash delay
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+
+    final authService = AuthService();
+    final user = authService.currentUser;
+
+    if (user == null) {
+      // Not signed in — go to login
+      Navigator.of(context).pushReplacementNamed(AppRouter.login);
+      return;
+    }
+
+    // Signed in — get stored role and route to the correct dashboard
+    final storedRole = await authService.getUserRole(user.uid);
+    if (!mounted) return;
+
+    final role = (storedRole != null && storedRole != 'supply_partner')
+        ? storedRole
+        : 'buyer';
+    final userName = (user.displayName?.isNotEmpty == true)
+        ? user.displayName!
+        : (user.email?.split('@').first ?? 'User');
+    final userEmail = user.email ?? '';
+
+    if (role == 'buyer') {
+      Navigator.of(context).pushReplacementNamed(AppRouter.buyerDashboard);
+    } else {
+      Navigator.of(context).pushReplacementNamed(
+        AppRouter.dashboard,
+        arguments: {
+          'role': role,
+          'userName': userName,
+          'userEmail': userEmail,
+        },
+      );
+    }
   }
 
   @override

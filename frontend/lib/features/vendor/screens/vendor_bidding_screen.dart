@@ -33,7 +33,7 @@ class _VendorBiddingScreenState extends State<VendorBiddingScreen>
             // Header
             Container(
               decoration: BoxDecoration(
-                color: Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),
@@ -106,7 +106,7 @@ class _VendorBiddingScreenState extends State<VendorBiddingScreen>
             // Tabs
             Container(
               decoration: BoxDecoration(
-                color: Color(0xFF101D22).withOpacity(0.8),
+                color: const Color(0xFF101D22).withOpacity(0.8),
                 border: Border(
                   bottom: BorderSide(
                     color: Colors.white.withOpacity(0.05),

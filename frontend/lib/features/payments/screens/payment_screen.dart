@@ -152,12 +152,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF00C853).withOpacity(0.2),
-            Color(0xFF00C853).withOpacity(0.05),
+            const Color(0xFF00C853).withOpacity(0.2),
+            const Color(0xFF00C853).withOpacity(0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Color(0xFF00C853).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF00C853).withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +167,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Color(0xFF00C853).withOpacity(0.2),
+                  color: const Color(0xFF00C853).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.account_balance_wallet, color: Color(0xFF00C853)),
@@ -615,7 +615,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Color(0xFF00C853).withOpacity(0.2),
+              color: const Color(0xFF00C853).withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: const Color(0xFF00C853), size: 20),

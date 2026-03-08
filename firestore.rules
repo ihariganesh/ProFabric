@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection — each user can read/write their own doc
+    // Any authenticated user can read others' profiles (for marketplace discovery)
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Orders — authenticated users only
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // All other documents — authenticated users only
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
