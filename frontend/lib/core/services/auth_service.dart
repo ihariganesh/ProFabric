@@ -2,19 +2,20 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   FirebaseAuth? _auth;
   GoogleSignIn? _googleSignIn;
-  
+
   bool get _isFirebaseSupported => !(!kIsWeb && Platform.isLinux);
-  
+
   FirebaseAuth? get _firebaseAuth {
     if (!_isFirebaseSupported) return null;
     _auth ??= FirebaseAuth.instance;
     return _auth;
   }
-  
+
   GoogleSignIn? get _googleSignInInstance {
     if (!_isFirebaseSupported) return null;
     _googleSignIn ??= GoogleSignIn(scopes: ['email', 'profile']);
@@ -25,7 +26,8 @@ class AuthService {
   User? get currentUser => _firebaseAuth?.currentUser;
 
   // Auth state changes stream
-  Stream<User?> get authStateChanges => _firebaseAuth?.authStateChanges() ?? Stream.value(null);
+  Stream<User?> get authStateChanges =>
+      _firebaseAuth?.authStateChanges() ?? Stream.value(null);
 
   // Sign in with email and password
   Future<UserCredential?> signInWithEmailPassword({
@@ -42,9 +44,15 @@ class AuthService {
       );
       return credential;
     } on FirebaseAuthException catch (e) {
-      
       throw _handleAuthException(e);
     } catch (e) {
+      // Android API 36: Pigeon deserialization bug — auth succeeds but Dart layer throws
+      if (_isPigeonError(e)) {
+        if (kDebugMode)
+          print('PigeonUserDetails bug on signIn — checking auth state...');
+        if (await _waitForFirebaseAuth()) return null;
+        throw 'Sign-in failed. Please try again.';
+      }
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -72,6 +80,18 @@ class AuthService {
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     } catch (e) {
+      // Android API 36: Pigeon deserialization bug — account created but Dart layer throws
+      if (_isPigeonError(e)) {
+        if (kDebugMode)
+          print('PigeonUserDetails bug on signUp — checking auth state...');
+        if (await _waitForFirebaseAuth()) {
+          try {
+            await _firebaseAuth!.currentUser?.updateDisplayName(displayName);
+          } catch (_) {}
+          return null;
+        }
+        throw 'Account creation failed. Please try again.';
+      }
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -84,16 +104,24 @@ class AuthService {
 
   // Wait for Firebase Auth to complete and return currentUser if signed in
   Future<bool> _waitForFirebaseAuth() async {
-    // Firebase Auth often completes before the Pigeon error is thrown,
-    // but give it a moment just in case
+    // Check immediately first — Firebase Auth often settles before Pigeon throws
+    if (_firebaseAuth!.currentUser != null) {
+      if (kDebugMode) {
+        print(
+            'Firebase Auth confirmed immediately: ${_firebaseAuth!.currentUser!.email}');
+      }
+      return true;
+    }
+    // If not ready yet, poll up to 3×300 ms
     for (int i = 0; i < 3; i++) {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 300));
       try {
         await _firebaseAuth!.currentUser?.reload();
       } catch (_) {}
       if (_firebaseAuth!.currentUser != null) {
         if (kDebugMode) {
-          print('Firebase Auth confirmed: ${_firebaseAuth!.currentUser!.email}');
+          print(
+              'Firebase Auth confirmed: ${_firebaseAuth!.currentUser!.email}');
         }
         return true;
       }
@@ -106,10 +134,13 @@ class AuthService {
     if (!_isFirebaseSupported) {
       throw 'Firebase Auth is not supported on this platform';
     }
-    
+
     try {
-      // Trigger the interactive Google Sign-In flow
-      final GoogleSignInAccount? googleUser = await _googleSignInInstance!.signIn();
+      // Try silent sign-in first — instant for returning users
+      GoogleSignInAccount? googleUser =
+          await _googleSignInInstance!.signInSilently();
+      // Fall back to interactive sign-in if silent fails
+      googleUser ??= await _googleSignInInstance!.signIn();
 
       if (googleUser == null) {
         return null; // User canceled
@@ -121,7 +152,8 @@ class AuthService {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      final userCredential = await _firebaseAuth!.signInWithCredential(credential);
+      final userCredential =
+          await _firebaseAuth!.signInWithCredential(credential);
 
       if (kDebugMode) {
         print('Google Sign In successful: ${userCredential.user?.email}');
@@ -137,14 +169,15 @@ class AuthService {
       // just check Firebase's auth state directly.
       if (_isPigeonError(e)) {
         if (kDebugMode) {
-          print('PigeonUserDetails bug — checking Firebase auth state directly...');
+          print(
+              'PigeonUserDetails bug — checking Firebase auth state directly...');
         }
         if (await _waitForFirebaseAuth()) {
           return null; // Auth succeeded — caller uses currentUser
         }
         throw 'Google Sign-In failed. Please try again.';
       }
-      
+
       // Handle other Google Sign-In errors
       if (kDebugMode) {
         print('Google Sign In error: $e');
@@ -154,10 +187,32 @@ class AuthService {
         throw 'Google Sign-In configuration error. Check SHA-1 fingerprint in Firebase Console.';
       } else if (errorStr.contains('apiexception: 12500')) {
         throw 'Google Play Services update required.';
-      } else if (errorStr.contains('api key not valid') || errorStr.contains('internal error')) {
+      } else if (errorStr.contains('api key not valid') ||
+          errorStr.contains('internal error')) {
         throw 'An internal error has occurred. [ API key not valid. Please pass a valid API key.';
       }
       throw 'Failed to sign in with Google. Please try again.';
+    }
+  }
+
+  // ── Role persistence ──────────────────────────────────────────────────────
+  static const String _rolePrefix = 'user_role_';
+
+  /// Persist the role chosen at sign-up so cross-role logins can be blocked.
+  Future<void> saveUserRole(String uid, String role) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('$_rolePrefix$uid', role);
+    } catch (_) {}
+  }
+
+  /// Returns the stored role for [uid], or null if none saved yet.
+  Future<String?> getUserRole(String uid) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('$_rolePrefix$uid');
+    } catch (_) {
+      return null;
     }
   }
 
@@ -201,7 +256,7 @@ class AuthService {
     try {
       var acs = ActionCodeSettings(
         // URL must be whitelisted in the Firebase Console.
-        url: 'https://fabricflow.page.link/login', 
+        url: 'https://fabricflow.page.link/login',
         handleCodeInApp: true,
         iOSBundleId: 'com.example.fabricflow',
         androidPackageName: 'com.example.fabricflow',

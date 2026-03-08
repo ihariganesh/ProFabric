@@ -1,147 +1,220 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/services/collab_request_service.dart';
 
-class NotificationsScreen extends StatelessWidget {
+/// Notifications screen — shows live notifications from CollabRequestService
+/// plus seeded sample ones. Updates in real-time via stream.
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  final _service = CollabRequestService.instance;
+  late StreamSubscription _sub;
+  String _activeFilter = 'All';
+
+  final _filterOptions = ['All', 'Requests', 'Orders', 'Production', 'Payments'];
+
+  @override
+  void initState() {
+    super.initState();
+    _service.seedSampleNotifications();
+    _sub = _service.notificationStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+
+  List<AppNotification> get _filtered {
+    final all = _service.notifications;
+    if (_activeFilter == 'All') return all;
+    final cat = _activeFilter.toLowerCase();
+    return all.where((n) => n.category == cat).toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final items = _filtered;
     return Scaffold(
-      backgroundColor: const Color(0xFF101D22),
+      backgroundColor: const Color(0xFF0B1215),
       body: SafeArea(
         child: Column(
           children: [
-            // App Bar
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF101D22).withOpacity(0.8),
-                border: Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withOpacity(0.05),
-                  ),
-                ),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Notifications',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Mark all read',
-                      style: TextStyle(
-                        color: Color(0xFF12AEE2),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Filter Tabs
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip('All', true),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Orders', false),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Production', false),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Logistics', false),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Payments', false),
-                  ],
-                ),
-              ),
-            ),
-
-            // Notifications List
+            _header(),
+            _filterChips(),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: items.isEmpty
+                  ? _emptyState()
+                  : ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      itemCount: items.length,
+                      itemBuilder: (_, i) => _notifCard(items[i]),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Header ─────────────────────────────────────────────────────────
+  Widget _header() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1215),
+        border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.04))),
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 18),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text('Notifications',
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          GestureDetector(
+            onTap: () {
+              _service.markAllRead();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All marked as read'),
+                  backgroundColor: Color(0xFF6C63FF),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+            child: Text('Mark all read',
+                style: TextStyle(
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Filter Chips ───────────────────────────────────────────────────
+  Widget _filterChips() {
+    return SizedBox(
+      height: 50,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemCount: _filterOptions.length,
+        itemBuilder: (_, i) {
+          final f = _filterOptions[i];
+          final sel = _activeFilter == f;
+          return GestureDetector(
+            onTap: () => setState(() => _activeFilter = f),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+              decoration: BoxDecoration(
+                color: sel ? const Color(0xFF6C63FF) : Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(20),
+                border: sel ? null : Border.all(color: Colors.white.withValues(alpha: 0.06)),
+              ),
+              child: Text(f,
+                  style: TextStyle(
+                      color: sel ? Colors.white : Colors.white54,
+                      fontSize: 12,
+                      fontWeight: sel ? FontWeight.w700 : FontWeight.w500)),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── Notification Card ──────────────────────────────────────────────
+  Widget _notifCard(AppNotification n) {
+    final iconData = _iconFor(n.icon);
+    final iconColor = _colorFor(n.icon);
+    final timeAgo = _timeAgo(n.createdAt);
+
+    return GestureDetector(
+      onTap: () {
+        _service.markRead(n.id);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: n.isRead
+              ? Colors.white.withValues(alpha: 0.02)
+              : const Color(0xFF6C63FF).withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: n.isRead
+                ? Colors.white.withValues(alpha: 0.04)
+                : const Color(0xFF6C63FF).withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              width: 42, height: 42,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(iconData, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildNotificationItem(
-                    icon: Icons.local_shipping,
-                    iconColor: const Color(0xFF12AEE2),
-                    title: 'Order #FB-8921 En Route',
-                    subtitle:
-                        'Your fabric shipment is 45% through production at Mill X',
-                    time: '5 minutes ago',
-                    isUnread: true,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(n.title,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: n.isRead ? FontWeight.w500 : FontWeight.w700)),
+                      ),
+                      if (!n.isRead)
+                        Container(
+                          width: 8, height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF6C63FF),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
                   ),
-                  _buildNotificationItem(
-                    icon: Icons.inventory_2,
-                    iconColor: Colors.orange,
-                    title: 'Low Stock Alert',
-                    subtitle:
-                        'Egyptian Cotton - Giza 45 inventory below threshold',
-                    time: '1 hour ago',
-                    isUnread: true,
-                  ),
-                  _buildNotificationItem(
-                    icon: Icons.payment,
-                    iconColor: Colors.green,
-                    title: 'Payment Received',
-                    subtitle: 'INR 2,45,000 received for Order #FB-8850',
-                    time: '3 hours ago',
-                    isUnread: false,
-                  ),
-                  _buildNotificationItem(
-                    icon: Icons.verified,
-                    iconColor: Colors.green,
-                    title: 'Quality Check Passed',
-                    subtitle: 'Order #FB-8902 passed all quality inspections',
-                    time: '5 hours ago',
-                    isUnread: false,
-                  ),
-                  _buildNotificationItem(
-                    icon: Icons.chat_bubble,
-                    iconColor: const Color(0xFF12AEE2),
-                    title: 'New Message from Global Stitch',
-                    subtitle:
-                        'Production timeline has been updated for your review',
-                    time: '8 hours ago',
-                    isUnread: false,
-                  ),
-                  _buildNotificationItem(
-                    icon: Icons.local_offer,
-                    iconColor: Colors.purple,
-                    title: 'New Vendor Bid Received',
-                    subtitle:
-                        '3 vendors submitted bids for your fabric request',
-                    time: '1 day ago',
-                    isUnread: false,
-                  ),
-                  _buildNotificationItem(
-                    icon: Icons.warning,
-                    iconColor: Colors.red,
-                    title: 'Delay Notification',
-                    subtitle: 'Order #FB-8745 delayed by 2 days due to weather',
-                    time: '2 days ago',
-                    isUnread: false,
-                  ),
+                  const SizedBox(height: 4),
+                  Text(n.subtitle,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5), fontSize: 13, height: 1.4)),
+                  const SizedBox(height: 6),
+                  Text(timeAgo,
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.25), fontSize: 11)),
                 ],
               ),
             ),
@@ -151,118 +224,54 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFF12AEE2)
-            : Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color:
-              isSelected ? Colors.transparent : Colors.white.withOpacity(0.1),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-          color: isSelected ? const Color(0xFF101D22) : Colors.white,
-        ),
+  // ─── Empty State ────────────────────────────────────────────────────
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.notifications_off_rounded,
+              color: Colors.white.withValues(alpha: 0.1), size: 64),
+          const SizedBox(height: 12),
+          Text('No notifications yet',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 15)),
+        ],
       ),
     );
   }
 
-  Widget _buildNotificationItem({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required String time,
-    required bool isUnread,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isUnread
-            ? const Color(0xFF12AEE2).withOpacity(0.05)
-            : Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isUnread
-              ? const Color(0xFF12AEE2).withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight:
-                              isUnread ? FontWeight.bold : FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    if (isUnread)
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF12AEE2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  // ─── Helpers ────────────────────────────────────────────────────────
+  IconData _iconFor(String key) {
+    switch (key) {
+      case 'send': return Icons.send_rounded;
+      case 'accepted': return Icons.check_circle_rounded;
+      case 'declined': return Icons.cancel_rounded;
+      case 'shipping': return Icons.local_shipping_rounded;
+      case 'quality': return Icons.verified_rounded;
+      case 'chat': return Icons.chat_bubble_rounded;
+      case 'payment': return Icons.payment_rounded;
+      default: return Icons.notifications_rounded;
+    }
+  }
+
+  Color _colorFor(String key) {
+    switch (key) {
+      case 'send': return const Color(0xFF6C63FF);
+      case 'accepted': return const Color(0xFF00C896);
+      case 'declined': return const Color(0xFFEF5350);
+      case 'shipping': return const Color(0xFF3F8CFF);
+      case 'quality': return const Color(0xFF00C896);
+      case 'chat': return const Color(0xFF6C63FF);
+      case 'payment': return const Color(0xFF00C896);
+      default: return const Color(0xFF3F8CFF);
+    }
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }

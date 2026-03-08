@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 
 class UserService {
   FirebaseFirestore? _firestore;
-  
+
   bool get _isFirebaseSupported => !(!kIsWeb && Platform.isLinux);
-  
+
   FirebaseFirestore? get _firestoreInstance {
     if (!_isFirebaseSupported) return null;
     _firestore ??= FirebaseFirestore.instance;
@@ -35,7 +35,7 @@ class UserService {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      
+
       if (kDebugMode) {
         print('User role saved: $email -> $role');
       }
@@ -57,8 +57,9 @@ class UserService {
     }
 
     try {
-      final doc = await _firestoreInstance!.collection('users').doc(userId).get();
-      
+      final doc =
+          await _firestoreInstance!.collection('users').doc(userId).get();
+
       if (doc.exists) {
         final data = doc.data();
         return data?['role'] as String?;
@@ -82,8 +83,9 @@ class UserService {
     }
 
     try {
-      final doc = await _firestoreInstance!.collection('users').doc(userId).get();
-      
+      final doc =
+          await _firestoreInstance!.collection('users').doc(userId).get();
+
       if (doc.exists) {
         return doc.data();
       }
@@ -93,6 +95,25 @@ class UserService {
         print('Error getting user data: $e');
       }
       return null;
+    }
+  }
+
+  /// Get all users with a given role — used by the marketplace to list accounts.
+  Future<List<Map<String, dynamic>>> getUsersByRole(String role) async {
+    if (!_isFirebaseSupported) return [];
+    try {
+      final snapshot = await _firestoreInstance!
+          .collection('users')
+          .where('role', isEqualTo: role)
+          .get();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['uid'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      if (kDebugMode) print('Error getting users by role: $e');
+      return [];
     }
   }
 

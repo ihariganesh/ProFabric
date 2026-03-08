@@ -718,9 +718,9 @@ class _LogisticsDashboardScreenState extends State<LogisticsDashboardScreen>
               Navigator.pushNamed(context, '/notifications');
               break;
             case 2:
-              Navigator.pushNamed(context, '/chat', arguments: {
-                'recipientName': 'Support',
-              });
+            Navigator.pushNamed(context, '/chat-list', arguments: {
+              'role': 'logistics',
+            });
               break;
           }
         },

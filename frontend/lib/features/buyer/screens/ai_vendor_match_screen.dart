@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// AI-powered vendor suggestion screen based on order requirements
-/// Shows budget, timeline, fabric type and recommends best matching manufacturers
+/// AI Vendor Match screen – buyer uploads their existing design,
+/// AI analyses it and recommends the best textile manufacturers.
 class AIVendorMatchScreen extends StatefulWidget {
   const AIVendorMatchScreen({super.key});
 
@@ -10,87 +10,93 @@ class AIVendorMatchScreen extends StatefulWidget {
 }
 
 class _AIVendorMatchScreenState extends State<AIVendorMatchScreen> {
-  bool _isAnalyzing = false;
+  bool _uploaded = false;
+  bool _analyzing = false;
   bool _showResults = false;
-  RangeValues _budgetRange = const RangeValues(20000, 100000);
-  String _selectedTimeline = '2-3 weeks';
-  String _selectedFabric = 'Silk';
+  RangeValues _budget = const RangeValues(20000, 100000);
+  String _timeline = '2-3 weeks';
+  String _fabric = 'Auto-detect';
 
-  final _fabrics = ['Silk', 'Cotton', 'Linen', 'Polyester', 'Jute', 'Velvet', 'Denim', 'Wool'];
-  final _timelines = ['1 week', '2-3 weeks', '1 month', '2 months', '3+ months'];
-
-  final _vendors = [
-    _AIVendor(name: 'Lakshmi Textiles', location: 'Coimbatore, TN', matchScore: 96, rating: 4.9, price: 420,
-        completedOrders: 1240, delivery: '18 days', quality: 98, speed: 92, trust: 95, tags: ['Premium Silk', 'Certified', 'Bulk Ready'],
-        reason: 'Best match for silk fabric within your budget. Known for premium quality and timely delivery.'),
-    _AIVendor(name: 'Sai Fabrics', location: 'Erode, TN', matchScore: 88, rating: 4.7, price: 380,
-        completedOrders: 890, delivery: '20 days', quality: 90, speed: 88, trust: 92, tags: ['Cost Effective', 'Quick Turnaround'],
-        reason: 'Great value option. Slightly lower price point with good quality standards.'),
-    _AIVendor(name: 'Arvind Mills', location: 'Ahmedabad, GJ', matchScore: 82, rating: 4.8, price: 460,
-        completedOrders: 3200, delivery: '25 days', quality: 95, speed: 80, trust: 97, tags: ['Large Scale', 'ISO Certified', 'Premium'],
-        reason: 'Industrial-scale production. Higher price but exceptional quality assurance and reliability.'),
-    _AIVendor(name: 'Royal Silks', location: 'Kanchipuram, TN', matchScore: 78, rating: 4.6, price: 550,
-        completedOrders: 560, delivery: '22 days', quality: 97, speed: 85, trust: 90, tags: ['Artisan', 'Handloom', 'Traditional'],
-        reason: 'Specializes in traditional handloom silk. Premium quality for heritage designs.'),
+  final _fabrics = [
+    'Auto-detect',
+    'Silk',
+    'Cotton',
+    'Linen',
+    'Polyester',
+    'Jute',
+    'Velvet',
+    'Denim',
+    'Wool'
+  ];
+  final _timelines = [
+    '1 week',
+    '2-3 weeks',
+    '1 month',
+    '2 months',
+    '3+ months'
   ];
 
-  void _runAIAnalysis() {
-    setState(() => _isAnalyzing = true);
+  // Vendors are populated from the real AI matching backend.
+  final List<_Vendor> _vendors = [];
+
+  void _simulateUpload() {
+    setState(() => _uploaded = true);
+  }
+
+  void _runAnalysis() {
+    setState(() => _analyzing = true);
     Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() { _isAnalyzing = false; _showResults = true; });
+      if (mounted) {
+        setState(() {
+          _analyzing = false;
+          _showResults = true;
+        });
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101D22),
+      backgroundColor: const Color(0xFF0A1015),
       appBar: AppBar(
-        backgroundColor: Colors.transparent, elevation: 0,
-        leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back, color: Colors.white)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Row(
           children: [
-            Icon(Icons.auto_awesome, color: Color(0xFF12AEE2), size: 20),
+            Icon(Icons.auto_awesome_rounded,
+                color: Color(0xFF00B0FF), size: 20),
             SizedBox(width: 8),
-            Text('AI Vendor Match', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text('Upload & AI Match',
+                style: TextStyle(color: Colors.white, fontSize: 18)),
           ],
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!_showResults) ...[
-              _buildConfigSection(),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isAnalyzing ? null : _runAIAnalysis,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF12AEE2),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                  child: _isAnalyzing
-                      ? const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-                          SizedBox(width: 12),
-                          Text('AI is analyzing...', style: TextStyle(color: Colors.white)),
-                        ])
-                      : const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Icon(Icons.auto_awesome, size: 20),
-                          SizedBox(width: 8),
-                          Text('Find Best Vendors', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                        ]),
-                ),
-              ),
+              _uploadSection(),
+              if (_uploaded) ...[
+                const SizedBox(height: 28),
+                _configSection(),
+                const SizedBox(height: 28),
+                _analyseButton(),
+              ],
             ],
             if (_showResults) ...[
-              _buildResultsHeader(),
+              _resultsHeader(),
               const SizedBox(height: 16),
-              ..._vendors.map((v) => _buildVendorCard(v)),
+              if (_vendors.isEmpty)
+                _noResultsState()
+              else
+                ..._vendors.map((v) => _vendorCard(v)),
             ],
           ],
         ),
@@ -98,136 +104,355 @@ class _AIVendorMatchScreenState extends State<AIVendorMatchScreen> {
     );
   }
 
-  Widget _buildConfigSection() {
+  // ─── Upload Section ─────────────────────────────────────────────────
+  Widget _uploadSection() {
+    return GestureDetector(
+      onTap: _uploaded ? null : _simulateUpload,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: double.infinity,
+        padding: const EdgeInsets.all(28),
+        decoration: BoxDecoration(
+          color: _uploaded
+              ? const Color(0xFF00E676).withOpacity(0.06)
+              : Colors.white.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _uploaded
+                ? const Color(0xFF00E676).withOpacity(0.25)
+                : Colors.white.withOpacity(0.08),
+            width: 2,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              _uploaded
+                  ? Icons.check_circle_rounded
+                  : Icons.cloud_upload_rounded,
+              size: 52,
+              color: _uploaded
+                  ? const Color(0xFF00E676)
+                  : Colors.white.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _uploaded ? 'Design uploaded!' : 'Upload Your Design',
+              style: TextStyle(
+                color: _uploaded ? const Color(0xFF00E676) : Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _uploaded
+                  ? 'floral-pattern-v3.png  •  2.4 MB'
+                  : 'Tap to upload an image, PDF or sketch of your existing design',
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+            ),
+            if (!_uploaded) ...[
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _uploadChip(Icons.image_rounded, 'Gallery'),
+                  const SizedBox(width: 12),
+                  _uploadChip(Icons.camera_alt_rounded, 'Camera'),
+                  const SizedBox(width: 12),
+                  _uploadChip(Icons.insert_drive_file_rounded, 'File'),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _uploadChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF00B0FF).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF00B0FF).withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: const Color(0xFF00B0FF), size: 16),
+          const SizedBox(width: 6),
+          Text(label,
+              style: const TextStyle(
+                  color: Color(0xFF00B0FF),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  // ─── Configuration Section ──────────────────────────────────────────
+  Widget _configSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // AI branding card
+        // AI banner
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: [
-              const Color(0xFF12AEE2).withOpacity(0.15),
-              Colors.purple.withOpacity(0.05),
+              const Color(0xFF00B0FF).withOpacity(0.12),
+              const Color(0xFF7C4DFF).withOpacity(0.05),
             ]),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF12AEE2).withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(18),
+            border:
+                Border.all(color: const Color(0xFF00B0FF).withOpacity(0.15)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.psychology, color: Color(0xFF12AEE2), size: 36),
-              SizedBox(width: 16),
+              Icon(Icons.psychology_rounded,
+                  color: Color(0xFF00B0FF), size: 32),
+              SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Smart Vendor Matching', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('AI will analyse your design',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold)),
                     SizedBox(height: 4),
-                    Text('Set your requirements and our AI will find the best textile manufacturers for your order.',
-                        style: TextStyle(color: Colors.white54, fontSize: 13)),
+                    Text(
+                        'Fabric type, colour palette, weave pattern and complexity are auto-detected.',
+                        style: TextStyle(color: Colors.white38, fontSize: 12)),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
 
-        // Fabric type
-        const Text('Fabric Type', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+        // Fabric override
+        const Text('Fabric Type Override',
+            style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8, runSpacing: 8,
-          children: _fabrics.map((f) => ChoiceChip(
-            label: Text(f, style: TextStyle(color: _selectedFabric == f ? Colors.white : Colors.white54, fontSize: 12)),
-            selected: _selectedFabric == f,
-            selectedColor: const Color(0xFF12AEE2),
-            backgroundColor: const Color(0xFF1A2A30),
-            onSelected: (_) => setState(() => _selectedFabric = f),
-            side: BorderSide(color: _selectedFabric == f ? const Color(0xFF12AEE2) : Colors.white12),
-          )).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: _fabrics
+              .map((f) => ChoiceChip(
+                    label: Text(f,
+                        style: TextStyle(
+                            color: _fabric == f ? Colors.white : Colors.white38,
+                            fontSize: 12)),
+                    selected: _fabric == f,
+                    selectedColor: const Color(0xFF00B0FF),
+                    backgroundColor: const Color(0xFF111D23),
+                    onSelected: (_) => setState(() => _fabric = f),
+                    side: BorderSide(
+                        color: _fabric == f
+                            ? const Color(0xFF00B0FF)
+                            : Colors.white10),
+                  ))
+              .toList(),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 22),
 
-        // Budget range
-        const Text('Budget Range', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+        // Budget
+        const Text('Budget Range',
+            style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('₹${_budgetRange.start.toInt()}', style: const TextStyle(color: Color(0xFF00C853), fontSize: 14, fontWeight: FontWeight.w600)),
-            Text('₹${_budgetRange.end.toInt()}', style: const TextStyle(color: Color(0xFF00C853), fontSize: 14, fontWeight: FontWeight.w600)),
+            Text('₹${_budget.start.toInt()}',
+                style: const TextStyle(
+                    color: Color(0xFF00E676),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600)),
+            Text('₹${_budget.end.toInt()}',
+                style: const TextStyle(
+                    color: Color(0xFF00E676),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600)),
           ],
         ),
         SliderTheme(
           data: SliderThemeData(
-            activeTrackColor: const Color(0xFF00C853),
-            inactiveTrackColor: Colors.white.withOpacity(0.08),
-            thumbColor: const Color(0xFF00C853),
-            overlayColor: const Color(0xFF00C853).withOpacity(0.2),
+            activeTrackColor: const Color(0xFF00E676),
+            inactiveTrackColor: Colors.white.withOpacity(0.06),
+            thumbColor: const Color(0xFF00E676),
+            overlayColor: const Color(0xFF00E676).withOpacity(0.15),
           ),
           child: RangeSlider(
-            values: _budgetRange, min: 5000, max: 500000, divisions: 99,
-            onChanged: (v) => setState(() => _budgetRange = v),
+            values: _budget,
+            min: 5000,
+            max: 500000,
+            divisions: 99,
+            onChanged: (v) => setState(() => _budget = v),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
         // Timeline
-        const Text('Timeline', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+        const Text('Timeline',
+            style: TextStyle(
+                color: Colors.white54,
+                fontSize: 13,
+                fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Wrap(
-          spacing: 8, runSpacing: 8,
-          children: _timelines.map((t) => ChoiceChip(
-            label: Text(t, style: TextStyle(color: _selectedTimeline == t ? Colors.white : Colors.white54, fontSize: 12)),
-            selected: _selectedTimeline == t,
-            selectedColor: const Color(0xFF00C853),
-            backgroundColor: const Color(0xFF1A2A30),
-            onSelected: (_) => setState(() => _selectedTimeline = t),
-            side: BorderSide(color: _selectedTimeline == t ? const Color(0xFF00C853) : Colors.white12),
-          )).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: _timelines
+              .map((t) => ChoiceChip(
+                    label: Text(t,
+                        style: TextStyle(
+                            color:
+                                _timeline == t ? Colors.white : Colors.white38,
+                            fontSize: 12)),
+                    selected: _timeline == t,
+                    selectedColor: const Color(0xFF00E676),
+                    backgroundColor: const Color(0xFF111D23),
+                    onSelected: (_) => setState(() => _timeline = t),
+                    side: BorderSide(
+                        color: _timeline == t
+                            ? const Color(0xFF00E676)
+                            : Colors.white10),
+                  ))
+              .toList(),
         ),
       ],
     );
   }
 
-  Widget _buildResultsHeader() {
+  Widget _analyseButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _analyzing ? null : _runAnalysis,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00B0FF),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        child: _analyzing
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white),
+                  ),
+                  SizedBox(width: 12),
+                  Text('AI is analysing your design…',
+                      style: TextStyle(color: Colors.white)),
+                ],
+              )
+            : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.auto_awesome_rounded, size: 20),
+                  SizedBox(width: 8),
+                  Text('Find Best Vendors',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                ],
+              ),
+      ),
+    );
+  }
+
+  // ─── Results ────────────────────────────────────────────────────────
+  Widget _resultsHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF00C853).withOpacity(0.1),
+        color: const Color(0xFF00E676).withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF00C853).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF00E676).withOpacity(0.2)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle, color: Color(0xFF00C853), size: 20),
+          const Icon(Icons.check_circle_rounded,
+              color: Color(0xFF00E676), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('AI Analysis Complete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                Text('Found ${_vendors.length} vendors matching your requirements', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                const Text('AI Analysis Complete',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text('Found ${_vendors.length} vendors matching your design',
+                    style:
+                        const TextStyle(color: Colors.white38, fontSize: 12)),
               ],
             ),
           ),
           TextButton(
             onPressed: () => setState(() => _showResults = false),
-            child: const Text('Modify', style: TextStyle(color: Color(0xFF12AEE2))),
+            child: const Text('Modify',
+                style: TextStyle(color: Color(0xFF00B0FF))),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildVendorCard(_AIVendor vendor) {
+  Widget _noResultsState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          Icon(Icons.search_off_rounded,
+              color: Colors.white.withOpacity(0.1), size: 52),
+          const SizedBox(height: 14),
+          Text(
+            'No matches found yet',
+            style: TextStyle(
+                color: Colors.white.withOpacity(0.3),
+                fontSize: 16,
+                fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'AI vendor matching will be available once the backend is connected',
+            textAlign: TextAlign.center,
+            style:
+                TextStyle(color: Colors.white.withOpacity(0.2), fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vendorCard(_Vendor v) {
+    final isTop = v.match >= 90;
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2A30),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: vendor.matchScore >= 90 ? const Color(0xFF00C853).withOpacity(0.3) : Colors.white.withOpacity(0.05)),
+        color: const Color(0xFF111D23),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+            color: isTop
+                ? const Color(0xFF00E676).withOpacity(0.25)
+                : Colors.white.withOpacity(0.05)),
       ),
       child: Column(
         children: [
@@ -236,114 +461,176 @@ class _AIVendorMatchScreenState extends State<AIVendorMatchScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: const Color(0xFF12AEE2).withOpacity(0.2),
-                      child: Text(vendor.name[0], style: const TextStyle(color: Color(0xFF12AEE2), fontWeight: FontWeight.bold, fontSize: 16)),
+                      backgroundColor:
+                          const Color(0xFF00B0FF).withOpacity(0.15),
+                      child: Text(v.name[0],
+                          style: const TextStyle(
+                              color: Color(0xFF00B0FF),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(vendor.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
-                          Text(vendor.location, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                          Text(v.name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15)),
+                          Text(v.location,
+                              style: const TextStyle(
+                                  color: Colors.white30, fontSize: 12)),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: (vendor.matchScore >= 90 ? const Color(0xFF00C853) : const Color(0xFF12AEE2)).withOpacity(0.15),
+                        color: (isTop
+                                ? const Color(0xFF00E676)
+                                : const Color(0xFF00B0FF))
+                            .withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text('${vendor.matchScore}% match', style: TextStyle(
-                        color: vendor.matchScore >= 90 ? const Color(0xFF00C853) : const Color(0xFF12AEE2),
-                        fontSize: 13, fontWeight: FontWeight.bold)),
+                      child: Text('${v.match}% match',
+                          style: TextStyle(
+                              color: isTop
+                                  ? const Color(0xFF00E676)
+                                  : const Color(0xFF00B0FF),
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
+
                 // AI reason
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.03), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.amber.withOpacity(0.7), size: 16),
+                      Icon(Icons.auto_awesome_rounded,
+                          color: Colors.amber.withOpacity(0.6), size: 16),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(vendor.reason, style: const TextStyle(color: Colors.white54, fontSize: 12, fontStyle: FontStyle.italic))),
+                      Expanded(
+                          child: Text(v.reason,
+                              style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic))),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
+
                 // Stats
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStat('Quality', vendor.quality, Colors.green),
-                    _buildStat('Speed', vendor.speed, Colors.blue),
-                    _buildStat('Trust', vendor.trust, Colors.orange),
+                    _stat('Quality', v.quality, const Color(0xFF00E676)),
+                    _stat('Speed', v.speed, const Color(0xFF00B0FF)),
+                    _stat('Trust', v.trust, const Color(0xFFFF9100)),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
+
+                // Bottom meta
                 Row(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 14),
+                    const Icon(Icons.star_rounded,
+                        color: Colors.amber, size: 14),
                     const SizedBox(width: 4),
-                    Text('${vendor.rating}', style: const TextStyle(color: Colors.white, fontSize: 13)),
-                    const SizedBox(width: 12),
-                    Icon(Icons.inventory_2, color: Colors.white.withOpacity(0.3), size: 14),
+                    Text('${v.rating}',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13)),
+                    const SizedBox(width: 14),
+                    Icon(Icons.inventory_2_rounded,
+                        color: Colors.white.withOpacity(0.2), size: 14),
                     const SizedBox(width: 4),
-                    Text('${vendor.completedOrders} orders', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text('${v.orders} orders',
+                        style: const TextStyle(
+                            color: Colors.white38, fontSize: 12)),
                     const Spacer(),
-                    Text('₹${vendor.price}/m', style: const TextStyle(color: Color(0xFF00C853), fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text('₹${v.price}/m',
+                        style: const TextStyle(
+                            color: Color(0xFF00E676),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
-                    Text('~${vendor.delivery}', style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text('~${v.delivery}',
+                        style: const TextStyle(
+                            color: Colors.white30, fontSize: 12)),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 6,
-                  children: vendor.tags.map((t) => Chip(
-                    label: Text(t, style: const TextStyle(color: Colors.white54, fontSize: 10)),
-                    backgroundColor: Colors.white.withOpacity(0.05),
-                    padding: EdgeInsets.zero, materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  )).toList(),
+                  children: v.tags
+                      .map((t) => Chip(
+                            label: Text(t,
+                                style: const TextStyle(
+                                    color: Colors.white38, fontSize: 10)),
+                            backgroundColor: Colors.white.withOpacity(0.04),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          ))
+                      .toList(),
                 ),
               ],
             ),
           ),
+          // Action row
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.03),
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(bottom: Radius.circular(18)),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, '/chat', arguments: {'recipientName': vendor.name}),
-                    icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                    label: const Text('Contact'),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF12AEE2)),
+                    onPressed: () => Navigator.pushNamed(context, '/chat',
+                        arguments: {'recipientName': v.name}),
+                    icon:
+                        const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                    label: const Text('Chat'),
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF00B0FF)),
                   ),
                 ),
-                Container(width: 1, height: 24, color: Colors.white.withOpacity(0.05)),
+                Container(
+                    width: 1,
+                    height: 24,
+                    color: Colors.white.withOpacity(0.04)),
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () {
-                      Navigator.pop(context, vendor.name);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${vendor.name} selected!'), backgroundColor: const Color(0xFF00C853)),
-                      );
+                      Navigator.pop(context, v.name);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('${v.name} selected!'),
+                        backgroundColor: const Color(0xFF00E676),
+                      ));
                     },
-                    icon: const Icon(Icons.check_circle_outline, size: 16),
+                    icon: const Icon(Icons.check_circle_outline_rounded,
+                        size: 16),
                     label: const Text('Select'),
-                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF00C853)),
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF00E676)),
                   ),
                 ),
               ],
@@ -354,32 +641,53 @@ class _AIVendorMatchScreenState extends State<AIVendorMatchScreen> {
     );
   }
 
-  Widget _buildStat(String label, int value, Color color) {
+  Widget _stat(String label, int value, Color color) {
     return Column(
       children: [
         SizedBox(
-          width: 44, height: 44,
+          width: 44,
+          height: 44,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              CircularProgressIndicator(value: value / 100, backgroundColor: Colors.white.withOpacity(0.05), valueColor: AlwaysStoppedAnimation(color), strokeWidth: 3),
-              Text('$value', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+              CircularProgressIndicator(
+                value: value / 100,
+                backgroundColor: Colors.white.withOpacity(0.05),
+                valueColor: AlwaysStoppedAnimation(color),
+                strokeWidth: 3,
+              ),
+              Text('$value',
+                  style: TextStyle(
+                      color: color, fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+        Text(label,
+            style: const TextStyle(color: Colors.white30, fontSize: 10)),
       ],
     );
   }
 }
 
-class _AIVendor {
+class _Vendor {
   final String name, location, delivery, reason;
-  final int matchScore, completedOrders, quality, speed, trust;
+  final int match, orders, quality, speed, trust;
   final double rating, price;
   final List<String> tags;
-  _AIVendor({required this.name, required this.location, required this.matchScore, required this.rating,
-    required this.price, required this.completedOrders, required this.delivery, required this.quality,
-    required this.speed, required this.trust, required this.tags, required this.reason});
+
+  _Vendor({
+    required this.name,
+    required this.location,
+    required this.match,
+    required this.rating,
+    required this.price,
+    required this.orders,
+    required this.delivery,
+    required this.quality,
+    required this.speed,
+    required this.trust,
+    required this.tags,
+    required this.reason,
+  });
 }

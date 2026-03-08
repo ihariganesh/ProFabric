@@ -103,6 +103,9 @@ enum UserRole {
         return UserRole.stitchingUnit;
       case 'logistics':
         return UserRole.logistics;
+      case 'supply_partner':
+        // Generic supply partner — treat as fabric seller until sub-role is resolved
+        return UserRole.fabricSeller;
       case 'admin':
         return UserRole.admin;
       default:
