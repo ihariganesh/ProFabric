@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 /// Fabric Request Screen – Buyer uploads a sample image and fills in
 /// fabric details (color, type, thread, quantity, timeline, budget).
@@ -14,7 +17,9 @@ class FabricRequestScreen extends StatefulWidget {
 class _FabricRequestScreenState extends State<FabricRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _imageUploaded = false;
+  File? _selectedImage;
   bool _isSubmitting = false;
+  Color? _extractedColor;
 
   // Form fields
   String _selectedColor = '';
@@ -85,8 +90,33 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
     super.dispose();
   }
 
-  void _simulateImageUpload() {
-    setState(() => _imageUploaded = true);
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      setState(() {
+        _selectedImage = file;
+        _imageUploaded = true;
+      });
+      _extractColor(file);
+    }
+  }
+
+  Future<void> _extractColor(File imageFile) async {
+    try {
+      final paletteGenerator = await PaletteGenerator.fromImageProvider(
+        FileImage(imageFile),
+      );
+      if (paletteGenerator.dominantColor != null) {
+        setState(() {
+          _extractedColor = paletteGenerator.dominantColor!.color;
+          _selectedColor = 'Extracted';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error extracting color: $e');
+    }
   }
 
   void _submitRequest() {
@@ -219,10 +249,40 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
               const SizedBox(height: 28),
 
               // ─── Color Selection ────────────────────────
-              _sectionTitle('Preferred Color', 'Select your desired color'),
-              const SizedBox(height: 12),
-              _colorGrid(),
-              const SizedBox(height: 28),
+              if (_extractedColor == null) ...[
+                _sectionTitle('Preferred Color', 'Select your desired color'),
+                const SizedBox(height: 12),
+                _colorGrid(),
+                const SizedBox(height: 28),
+              ] else ...[
+                _sectionTitle('Extracted Color', 'Detected from your sample image'),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.06)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _extractedColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white24, width: 2),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Text('Automatically selected based on image',
+                          style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+              ],
 
               // ─── Fabric Type ────────────────────────────
               _sectionTitle('Fabric Type', 'Choose material type'),
@@ -340,7 +400,7 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
   // ─── Upload Area ────────────────────────────────────────────────────
   Widget _uploadArea() {
     return GestureDetector(
-      onTap: _simulateImageUpload,
+      onTap: _pickImage,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: double.infinity,
@@ -357,24 +417,16 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
             width: _imageUploaded ? 2 : 1,
           ),
         ),
-        child: _imageUploaded
+        child: _imageUploaded && _selectedImage != null
             ? Stack(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(19),
-                    child: Container(
+                    child: Image.file(
+                      _selectedImage!,
                       width: double.infinity,
                       height: 200,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF6C63FF).withOpacity(0.2),
-                            const Color(0xFF3F8CFF).withOpacity(0.1),
-                          ],
-                        ),
-                      ),
-                      child: const Icon(Icons.image_rounded,
-                          color: Color(0xFF6C63FF), size: 60),
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
@@ -384,18 +436,18 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00C896).withOpacity(0.2),
+                        color: const Color(0xFF00C896).withOpacity(0.9),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.check_circle_rounded,
-                              color: Color(0xFF00C896), size: 14),
+                              color: Colors.white, size: 14),
                           SizedBox(width: 4),
                           Text('Uploaded',
                               style: TextStyle(
-                                  color: Color(0xFF00C896), fontSize: 12)),
+                                  color: Colors.white, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -404,15 +456,22 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                     bottom: 10,
                     right: 10,
                     child: GestureDetector(
-                      onTap: () => setState(() => _imageUploaded = false),
+                      onTap: () {
+                        setState(() {
+                          _imageUploaded = false;
+                          _selectedImage = null;
+                          _extractedColor = null;
+                          _selectedColor = '';
+                        });
+                      },
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
+                          color: Colors.red.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.delete_outline_rounded,
-                            color: Colors.red, size: 18),
+                            color: Colors.white, size: 18),
                       ),
                     ),
                   ),
