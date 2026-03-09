@@ -30,6 +30,20 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
   final _budgetCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
 
+  // New text controllers
+  final _fabricGsmCtrl = TextEditingController();
+  final _numberColorsCtrl = TextEditingController();
+  final _customInstructionsCtrl = TextEditingController();
+
+  // New selection states
+  String _selectedProductType = 'Saree';
+  String _productCategoryMode = 'Fabric Only';
+  String _selectedFabricFinish = 'Soft';
+  String _isRfdAcceptable = 'No';
+  String _selectedPrintingMethod = 'Digital printing';
+  String _selectedPatternType = 'Repeating pattern';
+  String _selectedQualityPriority = 'Balanced';
+
   final _fabricTypes = [
     'Cotton',
     'Silk',
@@ -63,6 +77,53 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
     '3+ Months',
   ];
 
+  final _productTypes = [
+    'Saree',
+    'Kurti',
+    'Shirt',
+    'Dress',
+    'Upholstery fabric',
+    'Bedsheet',
+    'Custom textile',
+  ];
+
+  final _productCategoryModes = [
+    'Fabric Only',
+    'Fabric + Stitching',
+  ];
+
+  final _fabricFinishes = [
+    'Soft',
+    'Stretchable',
+    'Durable',
+  ];
+
+  final _yesNoOptions = [
+    'Yes',
+    'No',
+  ];
+
+  final _printingMethods = [
+    'Digital printing',
+    'Screen printing',
+    'Block printing',
+    'Reactive printing',
+    'Pigment printing',
+  ];
+
+  final _patternTypes = [
+    'Repeating pattern',
+    'Large motif',
+    'Full fabric print',
+  ];
+
+  final _qualityPriorities = [
+    'Lowest cost',
+    'Best quality',
+    'Fastest delivery',
+    'Balanced',
+  ];
+
   final _colorOptions = [
     {'name': 'Red', 'color': const Color(0xFFE53935)},
     {'name': 'Blue', 'color': const Color(0xFF1E88E5)},
@@ -87,6 +148,9 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
     _quantityCtrl.dispose();
     _budgetCtrl.dispose();
     _descriptionCtrl.dispose();
+    _fabricGsmCtrl.dispose();
+    _numberColorsCtrl.dispose();
+    _customInstructionsCtrl.dispose();
     super.dispose();
   }
 
@@ -255,10 +319,12 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                 _colorGrid(),
                 const SizedBox(height: 28),
               ] else ...[
-                _sectionTitle('Extracted Color', 'Detected from your sample image'),
+                _sectionTitle(
+                    'Extracted Color', 'Detected from your sample image'),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
@@ -277,7 +343,8 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                       ),
                       const SizedBox(width: 16),
                       const Text('Automatically selected based on image',
-                          style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          style:
+                              TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -301,6 +368,113 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                 items: _threadTypes,
                 selected: _selectedThreadType,
                 onSelected: (v) => setState(() => _selectedThreadType = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Product Type ───────────────────────────
+              _sectionTitle('Product Type',
+                  'What is being made? (Determines fabric choice, stitching complexity, and printing method)'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _productTypes,
+                selected: _selectedProductType,
+                onSelected: (v) => setState(() => _selectedProductType = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Manufacturing Mode ─────────────────────
+              _sectionTitle('Manufacturing Mode',
+                  'Is it fabric-only or fabric + stitching?'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _productCategoryModes,
+                selected: _productCategoryMode,
+                onSelected: (v) => setState(() => _productCategoryMode = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Fabric GSM / Thickness ─────────────────
+              _sectionTitle(
+                  'Fabric GSM / Thickness', 'Preference for thickness'),
+              const SizedBox(height: 12),
+              _inputField(
+                controller: _fabricGsmCtrl,
+                hint: 'e.g., 150 GSM',
+                icon: Icons.layers_rounded,
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Fabric Finish ──────────────────────────
+              _sectionTitle(
+                  'Required Fabric Finish', 'Select the finish properties'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _fabricFinishes,
+                selected: _selectedFabricFinish,
+                onSelected: (v) => setState(() => _selectedFabricFinish = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── RFD Acceptable ─────────────────────────
+              _sectionTitle('RFD Fabric Acceptable?',
+                  'Is Ready for Dyeing fabric acceptable?'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _yesNoOptions,
+                selected: _isRfdAcceptable,
+                onSelected: (v) => setState(() => _isRfdAcceptable = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Printing Requirements ──────────────────
+              _sectionTitle('Printing Method Preference',
+                  'Your design image determines printing complexity'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _printingMethods,
+                selected: _selectedPrintingMethod,
+                onSelected: (v) => setState(() => _selectedPrintingMethod = v),
+              ),
+              const SizedBox(height: 28),
+
+              _sectionTitle('Number of Colors', 'Expected number of colors'),
+              const SizedBox(height: 12),
+              _inputField(
+                controller: _numberColorsCtrl,
+                hint: 'e.g., 4',
+                icon: Icons.palette_rounded,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 28),
+
+              _sectionTitle('Pattern Type', 'What kind of pattern?'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _patternTypes,
+                selected: _selectedPatternType,
+                onSelected: (v) => setState(() => _selectedPatternType = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Quality Priority ───────────────────────
+              _sectionTitle(
+                  'Quality Priority', 'What is most important to you?'),
+              const SizedBox(height: 12),
+              _chipSelector(
+                items: _qualityPriorities,
+                selected: _selectedQualityPriority,
+                onSelected: (v) => setState(() => _selectedQualityPriority = v),
+              ),
+              const SizedBox(height: 28),
+
+              // ─── Custom Instructions ────────────────────
+              _sectionTitle('Custom Instructions',
+                  'Special embroidery, Packaging requirements, Fabric treatment, etc.'),
+              const SizedBox(height: 12),
+              _textArea(
+                controller: _customInstructionsCtrl,
+                hint: 'Enter any special requirements here...',
+                maxLines: 3,
               ),
               const SizedBox(height: 28),
 
@@ -446,8 +620,8 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
                               color: Colors.white, size: 14),
                           SizedBox(width: 4),
                           Text('Uploaded',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 12)),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 12)),
                         ],
                       ),
                     ),

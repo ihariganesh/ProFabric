@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/user_service.dart';
+import 'textile_profile_setup_screen.dart';
 
 /// Textile Orchestrator Dashboard – clean redesign.
 class TextileDashboardScreen extends StatefulWidget {
@@ -21,6 +23,8 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _navIndex = 0;
+  bool _isLoading = true;
+  bool _isProfileComplete = true;
 
   static const _kBlue = Color(0xFF3B82F6);
   static const _kGreen = Color(0xFF10B981);
@@ -36,6 +40,27 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    _checkProfileStatus();
+  }
+
+  Future<void> _checkProfileStatus() async {
+    final user = AuthService().currentUser;
+    if (user != null) {
+      final data = await UserService().getUserData(user.uid);
+      if (data != null && data['isProfileComplete'] == true) {
+        setState(() {
+          _isProfileComplete = true;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isProfileComplete = false;
+          _isLoading = false;
+        });
+      }
+    } else {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -46,6 +71,23 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: _kBg,
+        body: Center(child: CircularProgressIndicator(color: _kBlue)),
+      );
+    }
+
+    if (!_isProfileComplete) {
+      return TextileProfileSetupScreen(
+        onComplete: () {
+          setState(() {
+            _isProfileComplete = true;
+          });
+        },
+      );
+    }
+
     return Scaffold(
       backgroundColor: _kBg,
       body: SafeArea(
@@ -217,13 +259,13 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         children: [
-          _statCard('Pending', '12', Icons.hourglass_top_rounded, _kAmber),
+          _statCard('Pending', '0', Icons.hourglass_top_rounded, _kAmber),
           const SizedBox(width: 10),
-          _statCard('In Production', '8', Icons.precision_manufacturing_rounded,
+          _statCard('In Production', '0', Icons.precision_manufacturing_rounded,
               _kBlue),
           const SizedBox(width: 10),
           _statCard(
-              'Ready to Ship', '5', Icons.local_shipping_rounded, _kGreen),
+              'Ready to Ship', '0', Icons.local_shipping_rounded, _kGreen),
         ],
       ),
     );
@@ -281,17 +323,9 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _pendingOrdersTab() {
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      itemCount: 5,
-      itemBuilder: (_, i) => _orderCard(
-        orderId: 'ORD-${1001 + i}',
-        buyer: 'Buyer ${i + 1}',
-        fabric: ['Cotton', 'Silk', 'Polyester', 'Wool', 'Linen'][i],
-        quantity: (100 + i * 50),
-        deadline: '${15 + i} days',
-      ),
+    return const Center(
+      child: Text('No pending orders yet',
+          style: TextStyle(color: Colors.white54)),
     );
   }
 
@@ -430,11 +464,9 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _productionTab() {
-    return ListView.builder(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      itemCount: 3,
-      itemBuilder: (_, i) => _productionCard(i),
+    return const Center(
+      child: Text('No orders in production',
+          style: TextStyle(color: Colors.white54)),
     );
   }
 
@@ -522,10 +554,10 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
 
   Widget _vendorNetworkTab() {
     final vendors = [
-      (UserRole.fabricSeller, 12, 8),
-      (UserRole.printingUnit, 6, 4),
-      (UserRole.stitchingUnit, 8, 5),
-      (UserRole.logistics, 4, 3),
+      (UserRole.fabricSeller, 0, 0),
+      (UserRole.printingUnit, 0, 0),
+      (UserRole.stitchingUnit, 0, 0),
+      (UserRole.logistics, 0, 0),
     ];
 
     return ListView.builder(
@@ -585,7 +617,8 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: _kGreen.withValues(alpha: 0.2)),
             ),
-            child: Text('${(active / total * 100).toInt()}% Active',
+            child: Text(
+                '${total == 0 ? 0 : (active / total * 100).toInt()}% Active',
                 style: const TextStyle(
                     color: _kGreen, fontSize: 11, fontWeight: FontWeight.w600)),
           ),
@@ -634,12 +667,12 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
                         style:
                             TextStyle(color: Color(0xFF4B5563), fontSize: 13)),
                     SizedBox(height: 2),
-                    Text('₹12.4 Lakhs',
+                    Text('₹0',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold)),
-                    Text('+24% from last month',
+                    Text('No data yet',
                         style: TextStyle(color: _kGreen, fontSize: 12)),
                   ],
                 ),
@@ -655,21 +688,21 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
           const SizedBox(height: 12),
           Row(
             children: [
-              _metricCard('Completed', '156', '+12%', true,
+              _metricCard('Completed', '0', '0%', true,
                   Icons.check_circle_outline_rounded),
               const SizedBox(width: 12),
-              _metricCard('Avg. Delivery', '18 days', '-8%', true,
+              _metricCard('Avg. Delivery', '0 days', '0%', true,
                   Icons.schedule_rounded),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              _metricCard('Customer Rating', '4.8 ★', '+0.2', true,
+              _metricCard('Customer Rating', 'N/A ★', '0', true,
                   Icons.star_outline_rounded),
               const SizedBox(width: 12),
               _metricCard(
-                  'On-Time Rate', '94%', '+3%', true, Icons.verified_outlined),
+                  'On-Time Rate', '0%', '0%', true, Icons.verified_outlined),
             ],
           ),
         ],

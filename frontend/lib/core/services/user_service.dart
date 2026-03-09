@@ -122,6 +122,7 @@ class UserService {
     required String userId,
     String? displayName,
     String? photoURL,
+    Map<String, dynamic>? additionalData,
   }) async {
     if (!_isFirebaseSupported) return;
 
@@ -132,6 +133,7 @@ class UserService {
 
       if (displayName != null) updates['displayName'] = displayName;
       if (photoURL != null) updates['photoURL'] = photoURL;
+      if (additionalData != null) updates.addAll(additionalData);
 
       await _firestoreInstance!.collection('users').doc(userId).update(updates);
     } catch (e) {
