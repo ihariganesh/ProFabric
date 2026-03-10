@@ -239,7 +239,7 @@ class _FabricRequestScreenState extends State<FabricRequestScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  Navigator.pushReplacementNamed(context, '/ai-vendor-match');
+                  Navigator.pushReplacementNamed(context, '/vendor-selection');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6C63FF),

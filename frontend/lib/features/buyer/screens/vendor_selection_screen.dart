@@ -53,8 +53,34 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
   // Track which vendors already have a pending request
   final Set<String> _sentRequests = {};
 
+  List<Map<String, dynamic>> get _sortedVendors {
+    final list = List<Map<String, dynamic>>.from(_vendors);
+    switch (_selectedFilter) {
+      case 'Lowest Price':
+        list.sort((a, b) => (a['base_quote'] as int).compareTo(b['base_quote'] as int));
+        break;
+      case 'Highest Rating':
+        list.sort((a, b) => (b['rating'] as double).compareTo(a['rating'] as double));
+        break;
+      case 'Fastest Delivery':
+        list.sort((a, b) => (b['efficiency_score'] as int).compareTo(a['efficiency_score'] as int));
+        break;
+      case 'AI Recommended':
+      default:
+        // relevance based on overall score
+        list.sort((a, b) {
+          final scoreA = (a['price_score'] as int) + (a['quality_score'] as int) + (a['efficiency_score'] as int);
+          final scoreB = (b['price_score'] as int) + (b['quality_score'] as int) + (b['efficiency_score'] as int);
+          return scoreB.compareTo(scoreA); // Max score first
+        });
+        break;
+    }
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sortedList = _sortedVendors;
     return Scaffold(
       backgroundColor: const Color(0xFF0B1215),
       body: SafeArea(
@@ -67,8 +93,8 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
               child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-                itemCount: _vendors.length,
-                itemBuilder: (_, i) => _vendorCard(_vendors[i]),
+                itemCount: sortedList.length,
+                itemBuilder: (_, i) => _vendorCard(sortedList[i]),
               ),
             ),
           ],
