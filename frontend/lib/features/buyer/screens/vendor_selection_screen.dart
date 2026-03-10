@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/collab_request_service.dart';
+import '../../../core/services/user_service.dart';
 
 /// AI Vendor Matching — buyer sees matched vendors and sends collab requests.
 class VendorSelectionScreen extends StatefulWidget {
@@ -14,44 +15,65 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
   String _selectedFilter = 'AI Recommended';
   final _filters = ['AI Recommended', 'Lowest Price', 'Highest Rating', 'Fastest Delivery'];
 
-  final _vendors = <Map<String, dynamic>>[
-    {
-      'name': 'GreenThread Hub',
-      'location': 'Tirupur, India',
-      'rating': 4.9,
-      'price_score': 85,
-      'quality_score': 98,
-      'efficiency_score': 92,
-      'base_quote': 125000,
-      'capabilities': ['Digital Printing', 'Organic Cotton', 'Export Quality'],
-      'ai_tag': 'Best Quality',
-    },
-    {
-      'name': 'TexOrch Solutions',
-      'location': 'Surat, India',
-      'rating': 4.7,
-      'price_score': 95,
-      'quality_score': 88,
-      'efficiency_score': 96,
-      'base_quote': 110000,
-      'capabilities': ['Bulk Sourcing', 'Fast Turnaround', 'Synthetic Specialized'],
-      'ai_tag': 'Most Efficient',
-    },
-    {
-      'name': 'Heritage Weaves',
-      'location': 'Jaipur, India',
-      'rating': 4.8,
-      'price_score': 75,
-      'quality_score': 99,
-      'efficiency_score': 82,
-      'base_quote': 145000,
-      'capabilities': ['Handloom', 'Block Printing', 'Artisan Network'],
-      'ai_tag': 'Premium Choice',
-    },
-  ];
+  List<Map<String, dynamic>> _vendors = [];
+  bool _isLoading = true;
 
   // Track which vendors already have a pending request
   final Set<String> _sentRequests = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchVendors();
+  }
+
+  Future<void> _fetchVendors() async {
+    try {
+      final textileUsers = await UserService().getUsersByRole('textile');
+      
+      if (!mounted) return;
+
+      final mappedVendors = textileUsers.map((user) {
+        final products = user['productsProduced'] as List<dynamic>? ?? [];
+        List<String> capabilities = products.map((e) => e.toString()).toList();
+        if (capabilities.isEmpty) {
+          capabilities = ['General Textile'];
+        }
+
+        int qualityScore = 85;
+        if (user['productQuality'] == 'Premium') qualityScore = 95;
+        else if (user['productQuality'] == 'High') qualityScore = 90;
+        
+        final uid = user['uid']?.toString() ?? '';
+        final randomOffset = uid.isNotEmpty ? uid.codeUnitAt(0) : 0;
+
+        return {
+          'uid': uid,
+          'name': user['displayName'] ?? 'Unknown Vendor',
+          'location': user['address'] ?? 'India',
+          'rating': 4.5 + (randomOffset % 5) / 10.0, // e.g., 4.5 - 4.9
+          'price_score': 80 + (randomOffset % 15),
+          'quality_score': qualityScore,
+          'efficiency_score': 85 + (randomOffset % 10),
+          'base_quote': 100000 + (randomOffset * 1000),
+          'capabilities': capabilities,
+          'ai_tag': user['majorProductFocus'] ?? 'Matched Vendor',
+        };
+      }).toList();
+
+      setState(() {
+        _vendors = mappedVendors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching vendors: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   List<Map<String, dynamic>> get _sortedVendors {
     final list = List<Map<String, dynamic>>.from(_vendors);
@@ -90,12 +112,16 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
             _aiBanner(),
             _filterChips(),
             Expanded(
-              child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-                itemCount: sortedList.length,
-                itemBuilder: (_, i) => _vendorCard(sortedList[i]),
-              ),
+              child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF6C63FF)))
+                  : sortedList.isEmpty
+                      ? const Center(child: Text('No real textile vendors found in DB.', style: TextStyle(color: Colors.white54)))
+                      : ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                          itemCount: sortedList.length,
+                          itemBuilder: (_, i) => _vendorCard(sortedList[i]),
+                        ),
             ),
           ],
         ),
