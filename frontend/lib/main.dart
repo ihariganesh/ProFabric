@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/settings_service.dart';
+import 'core/services/mcp_bridge.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -27,7 +28,11 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
   }
 
+  // Initialize MCP Bridge
+  McpBridge.instance.start(apiUrl: "http://127.0.0.1:8000"); // 10.0.2.2 on emulator if needed
+
   // Initialize Hive
+
   await Hive.initFlutter();
 
   // Initialize persistent settings

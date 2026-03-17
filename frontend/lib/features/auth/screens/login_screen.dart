@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/user_service.dart';
+import '../../../core/services/mcp_bridge.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,6 +36,30 @@ class _LoginScreenState extends State<LoginScreen> {
     'stitching': 'Stitching Unit',
     'logistics': 'Logistics Provider',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _registerMcp();
+  }
+
+  void _registerMcp() {
+    McpBridge.instance.registerScreen("login_screen");
+    McpBridge.instance.registerWidget("email_input", (val) {
+      _emailController.text = val;
+    });
+    McpBridge.instance.registerWidget("password_input", (val) {
+      _passwordController.text = val;
+    });
+    McpBridge.instance.registerWidget("login_button", (val) {
+      _handleAuth();
+    });
+    McpBridge.instance.registerWidget("switch_auth_mode", (val) {
+      setState(() {
+        authMode = authMode == 'signin' ? 'signup' : 'signin';
+      });
+    });
+  }
 
   @override
   void dispose() {

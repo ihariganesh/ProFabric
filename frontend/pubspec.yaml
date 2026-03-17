@@ -53,6 +53,7 @@ dependencies:
   # Image Processing
   image_picker: ^1.0.7
   palette_generator: ^0.3.3+7
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
