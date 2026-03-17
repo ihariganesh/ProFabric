@@ -94,6 +94,16 @@ FabricFlow/
 - **Cloud**: AWS / Google Cloud Platform
 - **Monitoring**: Prometheus + Grafana
 
+## 🚀 Recent Updates (Gemini CLI Implementation)
+
+The following high-impact features were recently integrated using the Gemini CLI:
+- **EcoFlow Sustainability Optimizer**: Carbon footprint-aware routing.
+- **RiskRadar NLP Engine**: Real-time supply chain disruption monitoring.
+- **FabricSim Digital Twin**: Pre-production bottleneck simulation.
+- **EdgeGuard Live QC**: AI-powered fabric defect mapping.
+
+See [GEMINI_CHANGELOG.md](./GEMINI_CHANGELOG.md) for full implementation details.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

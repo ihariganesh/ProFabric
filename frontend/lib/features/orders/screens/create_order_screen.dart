@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/services/api_service.dart';
 
 /// Multi-step order creation screen for buyers
 /// Follows the textile workflow: Design → Specifications → Quantity → Review
@@ -1116,10 +1117,23 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
   void _submitOrder() async {
     setState(() => _isSubmitting = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() => _isSubmitting = false);
+    try {
+      await ApiService().createOrder(
+        fabricType: _selectedFabricType,
+        quantity: int.tryParse(_quantityController.text) ?? 100,
+        designPrompt: _designPromptController.text.isNotEmpty ? _designPromptController.text : null,
+        threadCount: int.tryParse(_threadCountController.text),
+        gsm: int.tryParse(_gsmController.text),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create order: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
 
     // Show success dialog
     if (mounted) {

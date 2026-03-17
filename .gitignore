@@ -126,3 +126,6 @@ versions/
 *.bak
 *.tmp
 .cache/
+node_modules/
+firebase
+firebase-debug.log

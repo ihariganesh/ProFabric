@@ -296,34 +296,48 @@ async def handle_mark_read(reader_id: str, payload: dict):
 
 # REST endpoints for chat history and rooms
 
+from app.models.message import Message
+from app.models.order import Order
+from app.models.user import User
+from sqlalchemy import or_, and_, desc
+
 @router.get("/rooms/{user_id}")
-async def get_user_chat_rooms(user_id: str, db: Session = Depends(get_db)):
-    """Get all chat rooms for a user"""
-    # This would query the database for chat rooms
-    # For now, return mock data
-    return {
-        "rooms": [
-            {
-                "id": "room-1",
-                "name": "Order #FB-8921",
-                "orderId": "FB-8921",
+async def get_user_chat_rooms(user_id: int, db: Session = Depends(get_db)):
+    """Get all chat rooms (orders) for a user"""
+    # Group messages by order_id where user is sender or receiver
+    messages = db.query(Message).filter(
+        or_(Message.sender_id == user_id, Message.receiver_id == user_id)
+    ).order_by(desc(Message.created_at)).all()
+    
+    # Extract unique orders
+    order_ids = []
+    rooms = []
+    
+    for msg in messages:
+        if msg.order_id and msg.order_id not in order_ids:
+            order_ids.append(msg.order_id)
+            
+            # Count unread messages where user is the receiver
+            unread = db.query(Message).filter(
+                Message.order_id == msg.order_id,
+                Message.receiver_id == user_id,
+                Message.is_read == False
+            ).count()
+            
+            order = msg.order
+            
+            rooms.append({
+                "id": f"order-{msg.order_id}",
+                "name": f"Order #{msg.order_id}",
+                "orderId": msg.order_id,
                 "lastMessage": {
-                    "content": "Sample approved!",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "content": msg.message_text,
+                    "timestamp": msg.created_at.isoformat(),
                 },
-                "unreadCount": 2,
-            },
-            {
-                "id": "room-2",
-                "name": "Textile Partner",
-                "lastMessage": {
-                    "content": "Production update sent",
-                    "timestamp": datetime.utcnow().isoformat(),
-                },
-                "unreadCount": 0,
-            },
-        ]
-    }
+                "unreadCount": unread,
+            })
+            
+    return {"rooms": rooms}
 
 
 @router.get("/history/{room_id}")
@@ -333,29 +347,45 @@ async def get_chat_history(
     before: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    """Get chat history for a room"""
-    # This would query the database for messages
-    # For now, return mock data
+    """Get chat history for a room (order)"""
+    # Extract order_id from room_id (format: "order-123")
+    try:
+        if room_id.startswith("order-"):
+            order_id = int(room_id.split("-")[1])
+        else:
+            order_id = int(room_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid room ID format")
+        
+    query = db.query(Message).filter(Message.order_id == order_id)
+    
+    if before:
+        try:
+            before_date = datetime.fromisoformat(before.replace('Z', '+00:00'))
+            query = query.filter(Message.created_at < before_date)
+        except ValueError:
+            pass
+            
+    messages = query.order_by(desc(Message.created_at)).limit(limit).all()
+    
+    # Reverse to chronological order
+    messages.reverse()
+    
     return {
         "roomId": room_id,
         "messages": [
             {
-                "id": "msg-1",
-                "content": "Hello, I'd like to discuss the order.",
-                "senderId": "user-1",
-                "senderName": "Buyer",
-                "timestamp": "2026-01-05T10:00:00Z",
-            },
-            {
-                "id": "msg-2",
-                "content": "Sure! The production is on track.",
-                "senderId": "user-2",
-                "senderName": "Textile Partner",
-                "timestamp": "2026-01-05T10:05:00Z",
-            },
+                "id": str(msg.message_id),
+                "content": msg.message_text,
+                "senderId": str(msg.sender_id),
+                "senderName": msg.sender.name if msg.sender else "Unknown",
+                "timestamp": msg.created_at.isoformat() + "Z",
+            }
+            for msg in messages
         ],
-        "hasMore": False,
+        "hasMore": len(messages) == limit,
     }
+
 
 
 @router.get("/online")

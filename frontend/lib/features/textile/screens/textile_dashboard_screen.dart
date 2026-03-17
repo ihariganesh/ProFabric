@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/user_service.dart';
+import '../../../core/services/collab_request_service.dart';
 import 'textile_profile_setup_screen.dart';
 
 /// Textile Orchestrator Dashboard – clean redesign.
@@ -69,6 +70,22 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     super.dispose();
   }
 
+  bool _useEcoFlow = false;
+  final List<Map<String, dynamic>> _riskAlerts = [
+    {
+      'title': 'Port Strike Alert',
+      'region': 'Kolkata Port',
+      'impact': 'High',
+      'icon': Icons.warning_amber_rounded
+    },
+    {
+      'title': 'Weather Warning',
+      'region': 'Coastal Region',
+      'impact': 'Medium',
+      'icon': Icons.cloudy_snowing
+    }
+  ];
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -95,6 +112,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
           children: [
             _header(),
             _statsRow(),
+            _riskRadarWidget(),
             _tabBar(),
             Expanded(
               child: TabBarView(
@@ -112,6 +130,85 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
       ),
       bottomNavigationBar: _bottomNav(),
       floatingActionButton: _fab(),
+    );
+  }
+
+  Widget _riskRadarWidget() {
+    if (_riskAlerts.isEmpty) return const SizedBox.shrink();
+    
+    return Container(
+      height: 60,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _riskAlerts.length,
+        itemBuilder: (context, i) {
+          final alert = _riskAlerts[i];
+          final color = alert['impact'] == 'High' ? _kRed : _kAmber;
+          return Container(
+            width: 220,
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(alert['icon'] as IconData, color: color, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(alert['title'] as String, 
+                        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                      Text(alert['region'] as String, 
+                        style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _ecoFlowToggle() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _kCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _useEcoFlow ? _kGreen.withValues(alpha: 0.5) : _kBorder),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.eco_rounded, color: _kGreen),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('EcoFlow Sustainability Optimizer', 
+                  style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                Text('Prioritize carbon-neutral supply chains', 
+                  style: TextStyle(color: Colors.white54, fontSize: 11)),
+              ],
+            ),
+          ),
+          Switch(
+            value: _useEcoFlow,
+            activeColor: _kGreen,
+            onChanged: (v) => setState(() => _useEcoFlow = v),
+          ),
+        ],
+      ),
     );
   }
 
@@ -254,20 +351,29 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _statsRow() {
-    return Container(
-      color: _kSurf,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Row(
-        children: [
-          _statCard('Pending', '0', Icons.hourglass_top_rounded, _kAmber),
-          const SizedBox(width: 10),
-          _statCard('In Production', '0', Icons.precision_manufacturing_rounded,
-              _kBlue),
-          const SizedBox(width: 10),
-          _statCard(
-              'Ready to Ship', '0', Icons.local_shipping_rounded, _kGreen),
-        ],
-      ),
+    return StreamBuilder<List<CollabRequest>>(
+      stream: CollabRequestService.instance.requestStream,
+      initialData: CollabRequestService.instance.requests,
+      builder: (context, snapshot) {
+        final reqs = snapshot.data ?? [];
+        final pending = reqs.where((r) => r.status == CollabRequestStatus.pending).length;
+        final inProduction = reqs.where((r) => r.status == CollabRequestStatus.inProduction).length;
+        final ready = reqs.where((r) => r.status == CollabRequestStatus.readyToShip).length;
+
+        return Container(
+          color: _kSurf,
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Row(
+            children: [
+              _statCard('Pending', pending.toString(), Icons.hourglass_top_rounded, _kAmber),
+              const SizedBox(width: 10),
+              _statCard('In Production', inProduction.toString(), Icons.precision_manufacturing_rounded, _kBlue),
+              const SizedBox(width: 10),
+              _statCard('Ready to Ship', ready.toString(), Icons.local_shipping_rounded, _kGreen),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -323,9 +429,36 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _pendingOrdersTab() {
-    return const Center(
-      child: Text('No pending orders yet',
-          style: TextStyle(color: Colors.white54)),
+    return StreamBuilder<List<CollabRequest>>(
+      stream: CollabRequestService.instance.requestStream,
+      initialData: CollabRequestService.instance.requests,
+      builder: (context, snapshot) {
+        final reqs = snapshot.data ?? [];
+        final pendingReqs =
+            reqs.where((r) => r.status == CollabRequestStatus.pending).toList();
+
+        if (pendingReqs.isEmpty) {
+          return const Center(
+            child: Text('No pending orders yet',
+                style: TextStyle(color: Colors.white54)),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: pendingReqs.length,
+          itemBuilder: (context, i) {
+            final req = pendingReqs[i];
+            return _orderCard(
+              orderId: req.id,
+              buyer: req.buyerName,
+              fabric: req.fabricType,
+              quantity: req.quantityMeters,
+              deadline: req.deadline,
+            );
+          },
+        );
+      },
     );
   }
 
@@ -387,7 +520,12 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
                         style: const TextStyle(
                             color: Color(0xFF4B5563), fontSize: 12)),
                     const Spacer(),
-                    _outlineBtn('Details', () => _showOrderDetails(orderId)),
+                    const Spacer(),
+                    _outlineBtn('Decline', () {
+                      CollabRequestService.instance.rejectRequest(orderId);
+                    }),
+                    const SizedBox(width: 8),
+                    _outlineBtn('Simulate', () => _showFabricSim(orderId)),
                     const SizedBox(width: 8),
                     _solidBtn(
                         'Accept', _kBlue, () => _showAcceptDialog(orderId)),
@@ -397,6 +535,132 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showFabricSim(String orderId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _kCard,
+        surfaceTintColor: Colors.transparent,
+        title: const Row(
+          children: [
+            Icon(Icons.precision_manufacturing_outlined, color: _kBlue),
+            SizedBox(width: 10),
+            Text('FabricSim Digital Twin', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Simulating production run for this supply chain...', 
+              style: TextStyle(color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 20),
+            _simResultRow('Bottlenecks', 'Dyeing (High Risk)', _kRed),
+            _simResultRow('Energy Est.', '1,240 kWh', _kBlue),
+            _simResultRow('Delay Prob.', '15%', _kAmber),
+            _simResultRow('Confidence', '92%', _kGreen),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: Colors.white54)),
+          ),
+          _solidBtn('Optimize Path', _kBlue, () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _simResultRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(value, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEdgeGuardQC(String orderId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _kCard,
+        surfaceTintColor: Colors.transparent,
+        title: const Row(
+          children: [
+            Icon(Icons.videocam_rounded, color: _kRed),
+            SizedBox(width: 10),
+            Text('EdgeGuard Live QC', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 200,
+              width: double.maxFinite,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _kBorder),
+              ),
+              child: Stack(
+                children: [
+                  const Center(child: Icon(Icons.texture_rounded, color: Colors.white10, size: 100)),
+                  // Simulated Defect Map
+                  Positioned(
+                    left: 50, top: 40,
+                    child: _defectMarker('Hole'),
+                  ),
+                  Positioned(
+                    right: 80, bottom: 60,
+                    child: _defectMarker('Stain'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Defect Map Generated', style: TextStyle(color: _kRed, fontSize: 14, fontWeight: FontWeight.bold)),
+            const Text('2 defects detected in current batch', style: TextStyle(color: Colors.white54, fontSize: 12)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: Colors.white54)),
+          ),
+          _solidBtn('Flag Batch', _kRed, () => Navigator.pop(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _defectMarker(String label) {
+    return Container(
+      width: 20, height: 20,
+      decoration: BoxDecoration(
+        color: _kRed.withValues(alpha: 0.3),
+        shape: BoxShape.circle,
+        border: Border.all(color: _kRed, width: 2),
+      ),
+      child: Center(
+        child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: _kRed, shape: BoxShape.circle)),
       ),
     );
   }
@@ -464,20 +728,54 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
   }
 
   Widget _productionTab() {
-    return const Center(
-      child: Text('No orders in production',
-          style: TextStyle(color: Colors.white54)),
+    return StreamBuilder<List<CollabRequest>>(
+      stream: CollabRequestService.instance.requestStream,
+      initialData: CollabRequestService.instance.requests,
+      builder: (context, snapshot) {
+        final reqs = snapshot.data ?? [];
+        final prodReqs = reqs.where((r) => r.status == CollabRequestStatus.inProduction).toList();
+
+        if (prodReqs.isEmpty) {
+          return const Center(
+            child: Text('No orders in production', style: TextStyle(color: Colors.white54)),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: prodReqs.length,
+          itemBuilder: (context, i) => _productionCard(prodReqs[i]),
+        );
+      },
     );
   }
 
-  Widget _productionCard(int i) {
+  Widget _productionCard(CollabRequest req) {
+    // Basic mapping of progress to stages
+    // Let's divide 1.0 into 4 stages: 0.25, 0.50, 0.75, 1.00
     final stages = [
-      ('Fabric Sourcing', _kGreen, true),
-      ('Printing', _kBlue, i > 0),
-      ('Stitching', _kAmber, false),
-      ('Quality Check', const Color(0xFF374151), false),
+      ('Fabric Sourcing', _kGreen, req.productionProgress >= 0.25),
+      ('Printing', _kBlue, req.productionProgress >= 0.50),
+      ('Stitching', _kAmber, req.productionProgress >= 0.75),
+      ('Quality Check', const Color(0xFF374151), req.productionProgress >= 1.00),
     ];
-    final progress = 0.25 + i * 0.2;
+
+    void _advanceProgress() {
+      double newProg = req.productionProgress + 0.25;
+      if (newProg > 1.0) newProg = 1.0;
+      
+      String stage = 'In Production';
+      if (newProg >= 0.25) stage = 'Fabric Sourcing';
+      if (newProg >= 0.50) stage = 'Printing';
+      if (newProg >= 0.75) stage = 'Stitching';
+      if (newProg >= 1.00) stage = 'Quality Check Pass';
+
+      if (newProg >= 1.00) {
+        CollabRequestService.instance.markReadyToShip(req.id);
+      } else {
+        CollabRequestService.instance.updateProgress(req.id, newProg, stage);
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -492,24 +790,32 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
         children: [
           Row(
             children: [
-              Text('ORD-${2001 + i}',
+              Text(req.id,
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w700)),
               const Spacer(),
-              Text('${(progress * 100).toInt()}% Complete',
+              _outlineBtn('EdgeGuard QC', () => _showEdgeGuardQC(req.id)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('${(req.productionProgress * 100).toInt()}% Complete',
                   style: const TextStyle(
                       color: _kBlue,
                       fontSize: 12,
                       fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Text('Deadline: ${req.deadline}', style: const TextStyle(color: Colors.white54, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: progress,
+              value: req.productionProgress,
               minHeight: 6,
               backgroundColor: Colors.white.withValues(alpha: 0.05),
               valueColor: const AlwaysStoppedAnimation(_kBlue),
@@ -524,14 +830,14 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
                       width: 22,
                       height: 22,
                       decoration: BoxDecoration(
-                          color: s.$2.withValues(alpha: 0.15),
+                          color: s.$3 ? s.$2.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(11)),
                       child: Center(
                         child: Icon(
                             s.$3
                                 ? Icons.check_rounded
                                 : Icons.hourglass_empty_rounded,
-                            color: s.$2,
+                            color: s.$3 ? s.$2 : Colors.white38,
                             size: 12),
                       ),
                     ),
@@ -547,6 +853,10 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
                   ],
                 ),
               )),
+          const SizedBox(height: 12),
+          Center(
+            child: _solidBtn('Advance Stage', _kBlue, _advanceProgress),
+          ),
         ],
       ),
     );
@@ -554,19 +864,23 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
 
   Widget _vendorNetworkTab() {
     final vendors = [
-      (UserRole.fabricSeller, 0, 0),
-      (UserRole.printingUnit, 0, 0),
-      (UserRole.stitchingUnit, 0, 0),
-      (UserRole.logistics, 0, 0),
+      (UserRole.fabricSeller, 12, 4),
+      (UserRole.printingUnit, 8, 2),
+      (UserRole.stitchingUnit, 15, 5),
+      (UserRole.logistics, 6, 3),
     ];
 
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-      itemCount: vendors.length,
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
+      itemCount: vendors.length + 1,
       itemBuilder: (_, i) {
-        final (role, total, active) = vendors[i];
-        return _vendorNetworkCard(role, total, active);
+        if (i == 0) return _ecoFlowToggle();
+        final (role, total, active) = vendors[i - 1];
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _vendorNetworkCard(role, total, active),
+        );
       },
     );
   }
@@ -1024,6 +1338,11 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
             ),
             onPressed: () {
               Navigator.pop(context);
+              CollabRequestService.instance.acceptRequest(
+                orderId,
+                price: int.tryParse(costCtrl.text),
+                timeline: daysCtrl.text.isNotEmpty ? daysCtrl.text : null,
+              );
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text('$orderId accepted!'),
                 backgroundColor: _kGreen,

@@ -8,17 +8,23 @@ import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'core/services/settings_service.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase only on supported platforms
-  if (!kIsWeb && !Platform.isLinux) {
-    try {
-      await Firebase.initializeApp();
-    } catch (e) {
-      debugPrint('Firebase initialization failed: $e');
+  try {
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } else if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
     }
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
   }
 
   // Initialize Hive

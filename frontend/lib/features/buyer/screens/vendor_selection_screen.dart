@@ -495,6 +495,10 @@ class _CollabSheetState extends State<_CollabSheet>
       vendorName: widget.vendorName,
       vendorLocation: widget.vendorLocation,
       designId: widget.designId,
+      buyerName: 'Neon Atelier',
+      fabricType: 'Premium Silk Blend',
+      quantityMeters: 1500,
+      deadline: '24 Apr',
     );
 
     await Future.delayed(const Duration(milliseconds: 1200));

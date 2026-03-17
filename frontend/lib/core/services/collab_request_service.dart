@@ -11,6 +11,20 @@ class CollabRequest {
   CollabRequestStatus status;
   DateTime? respondedAt;
 
+  // Extra details set when buyer sends request
+  String buyerName;
+  String fabricType;
+  int quantityMeters;
+  String deadline;
+
+  // Details set when textile accepts
+  int? agreedPrice;
+  String? agreedTimeline;
+
+  // Production progress (0.0 – 1.0)
+  double productionProgress;
+  String productionStage;
+
   CollabRequest({
     required this.id,
     required this.vendorName,
@@ -19,10 +33,18 @@ class CollabRequest {
     required this.createdAt,
     this.status = CollabRequestStatus.pending,
     this.respondedAt,
+    this.buyerName = 'Buyer',
+    this.fabricType = 'Fabric',
+    this.quantityMeters = 0,
+    this.deadline = 'TBD',
+    this.agreedPrice,
+    this.agreedTimeline,
+    this.productionProgress = 0.0,
+    this.productionStage = 'Pending',
   });
 }
 
-enum CollabRequestStatus { pending, accepted, rejected }
+enum CollabRequestStatus { pending, accepted, rejected, inProduction, readyToShip }
 
 /// An in-app notification entry.
 class AppNotification {
@@ -68,12 +90,14 @@ class CollabRequestService {
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
 
   /// Buyer sends a collab request to a vendor.
-  /// Returns the created request.
-  /// Simulates vendor response after a short delay.
   CollabRequest sendRequest({
     required String vendorName,
     required String vendorLocation,
     String designId = '',
+    String buyerName = 'Buyer',
+    String fabricType = 'Fabric',
+    int quantityMeters = 0,
+    String deadline = 'TBD',
   }) {
     final id = 'CR-${DateTime.now().millisecondsSinceEpoch % 100000}';
     final request = CollabRequest(
@@ -82,54 +106,135 @@ class CollabRequestService {
       vendorLocation: vendorLocation,
       designId: designId,
       createdAt: DateTime.now(),
+      buyerName: buyerName,
+      fabricType: fabricType,
+      quantityMeters: quantityMeters,
+      deadline: deadline,
     );
     _requests.insert(0, request);
     _requestController.add(_requests);
 
-    // Add "request sent" notification
     _addNotification(
       title: 'Request Sent to $vendorName',
-      subtitle:
-          'Your collaboration request has been sent. Waiting for their response.',
+      subtitle: 'Your collaboration request has been sent. Waiting for their response.',
       icon: 'send',
       category: 'requests',
     );
 
-    // Simulate vendor accepting after 5-12 seconds
-    final delay = 5 + Random().nextInt(8);
-    Future.delayed(Duration(seconds: delay), () {
-      _simulateVendorResponse(request);
-    });
-
     return request;
   }
 
-  void _simulateVendorResponse(CollabRequest request) {
-    // 85% chance of acceptance
-    final accepted = Random().nextDouble() < 0.85;
-    request.status =
-        accepted ? CollabRequestStatus.accepted : CollabRequestStatus.rejected;
-    request.respondedAt = DateTime.now();
-    _requestController.add(_requests);
+  /// Textile vendor accepts the request → moves to In Production
+  void acceptRequest(String requestId, {String? timeline, int? price}) {
+    final idx = _requests.indexWhere((r) => r.id == requestId);
+    if (idx != -1) {
+      final request = _requests[idx];
+      request.status = CollabRequestStatus.inProduction;
+      request.respondedAt = DateTime.now();
+      request.agreedPrice = price;
+      request.agreedTimeline = timeline;
+      request.productionProgress = 0.05;
+      request.productionStage = 'Order Accepted – Starting Production';
+      _requestController.add(_requests);
 
-    if (accepted) {
       _addNotification(
         title: '${request.vendorName} Accepted! 🎉',
-        subtitle:
-            'Your collaboration request was accepted. They will review your design and share a production timeline.',
+        subtitle: 'Your order is now in production. Timeline: ${timeline ?? "TBD"}.',
         icon: 'accepted',
         category: 'requests',
       );
-    } else {
+
+      // Start automatic backend ML progression simulation
+      _startPredictiveTracking(request);
+    }
+  }
+
+  void _startPredictiveTracking(CollabRequest request) {
+    // Simulates the predictive ML model updating progress
+    Timer.periodic(const Duration(seconds: 4), (timer) {
+      // Stop tracking if already completed manually
+      if (request.status != CollabRequestStatus.inProduction) {
+        timer.cancel();
+        return;
+      }
+
+      // Add random progress incrementally imitating an ML prediction update
+      double step = (0.05 + (DateTime.now().millisecond % 5) / 100.0);
+      double nextProgress = request.productionProgress + step;
+      
+      if (nextProgress > 1.0) nextProgress = 1.0;
+
+      String stage = 'In Production';
+      if (nextProgress >= 0.25 && nextProgress < 0.50) stage = 'Fabric Sourcing';
+      if (nextProgress >= 0.50 && nextProgress < 0.75) stage = 'Printing';
+      if (nextProgress >= 0.75 && nextProgress < 1.00) stage = 'Stitching';
+      if (nextProgress >= 1.00) stage = 'Quality Check Pass';
+
+      if (nextProgress >= 1.00) {
+        markReadyToShip(request.id);
+        timer.cancel();
+      } else {
+        updateProgress(request.id, nextProgress, stage);
+      }
+    });
+  }
+
+  /// Textile vendor rejects the request
+  void rejectRequest(String requestId) {
+    final idx = _requests.indexWhere((r) => r.id == requestId);
+    if (idx != -1) {
+      final request = _requests[idx];
+      request.status = CollabRequestStatus.rejected;
+      request.respondedAt = DateTime.now();
+      _requestController.add(_requests);
+
       _addNotification(
         title: '${request.vendorName} Declined',
-        subtitle:
-            'They are currently at full capacity. Try another vendor from the matching list.',
+        subtitle: 'They are currently at full capacity.',
         icon: 'declined',
         category: 'requests',
       );
     }
   }
+
+  /// Update production progress (called by textile when they update stages)
+  void updateProgress(String requestId, double progress, String stage) {
+    final idx = _requests.indexWhere((r) => r.id == requestId);
+    if (idx != -1) {
+      _requests[idx].productionProgress = progress;
+      _requests[idx].productionStage = stage;
+      if (progress >= 1.0) {
+        _requests[idx].status = CollabRequestStatus.readyToShip;
+      }
+      _requestController.add(_requests);
+    }
+  }
+
+  /// Mark order ready to ship
+  void markReadyToShip(String requestId) {
+    final idx = _requests.indexWhere((r) => r.id == requestId);
+    if (idx != -1) {
+      _requests[idx].status = CollabRequestStatus.readyToShip;
+      _requests[idx].productionProgress = 1.0;
+      _requests[idx].productionStage = 'Ready for Shipment';
+      _requestController.add(_requests);
+
+      _addNotification(
+        title: 'Order Ready to Ship! 📦',
+        subtitle: '${_requests[idx].vendorName} has completed your order.',
+        icon: 'ship',
+        category: 'logistics',
+      );
+    }
+  }
+
+  // Helpers
+  List<CollabRequest> get pendingRequests =>
+      _requests.where((r) => r.status == CollabRequestStatus.pending).toList();
+  List<CollabRequest> get inProductionRequests =>
+      _requests.where((r) => r.status == CollabRequestStatus.inProduction).toList();
+  List<CollabRequest> get readyToShipRequests =>
+      _requests.where((r) => r.status == CollabRequestStatus.readyToShip).toList();
 
   void _addNotification({
     required String title,

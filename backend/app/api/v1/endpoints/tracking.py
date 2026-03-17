@@ -291,7 +291,9 @@ async def get_order_tracking(
     }
 
 
-@router.get("/route/optimize")
+from geopy.distance import geodesic
+
+@router.get("/route")
 async def get_optimized_route(
     origin_lat: float,
     origin_lng: float,
@@ -299,18 +301,30 @@ async def get_optimized_route(
     dest_lng: float,
     current_user: User = Depends(get_current_user)
 ):
-    """Get optimized route between two points (placeholder for real routing API)"""
-    # In production, this would call Google Maps or HERE API
-    # For now, return mock data
-    return {
-        "distance_km": 150.5,
-        "estimated_duration_hours": 3.5,
-        "route_polyline": "mock_polyline_data",
-        "waypoints": [
-            {"lat": origin_lat, "lng": origin_lng, "name": "Origin"},
-            {"lat": (origin_lat + dest_lat) / 2, "lng": (origin_lng + dest_lng) / 2, "name": "Midpoint"},
-            {"lat": dest_lat, "lng": dest_lng, "name": "Destination"}
-        ],
-        "fuel_estimate_liters": 15.5,
-        "traffic_conditions": "moderate"
-    }
+    """Get optimized route between two points using geodesic distance"""
+    try:
+        origin = (origin_lat, origin_lng)
+        dest = (dest_lat, dest_lng)
+        distance_km = geodesic(origin, dest).kilometers
+
+        # Estimate assuming average speed of 50 km/h for freight
+        estimated_duration_hours = distance_km / 50.0
+
+        # Estimate fuel assuming 10 liters / 100km for freight truck
+        fuel_estimate_liters = (distance_km / 100) * 10.0
+
+        return {
+            "distance_km": round(distance_km, 2),
+            "estimated_duration_hours": round(estimated_duration_hours, 2),
+            "route_polyline": "direct_line_fallback",  # Needs external API for real routing
+            "waypoints": [
+                {"lat": origin_lat, "lng": origin_lng, "name": "Origin"},
+                {"lat": (origin_lat + dest_lat) / 2, "lng": (origin_lng + dest_lng) / 2, "name": "Midpoint"},
+                {"lat": dest_lat, "lng": dest_lng, "name": "Destination"}
+            ],
+            "fuel_estimate_liters": round(fuel_estimate_liters, 2),
+            "traffic_conditions": "unknown"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to calculate route: {str(e)}")
+

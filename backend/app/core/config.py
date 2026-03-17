@@ -46,9 +46,10 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     
     # Optimization Engine
-    OPTIMIZATION_COST_WEIGHT: float = 0.5
+    OPTIMIZATION_COST_WEIGHT: float = 0.4
     OPTIMIZATION_SPEED_WEIGHT: float = 0.3
-    OPTIMIZATION_QUALITY_WEIGHT: float = 0.2
+    OPTIMIZATION_QUALITY_WEIGHT: float = 0.3
+    OPTIMIZATION_SUSTAINABILITY_WEIGHT: float = 0.3
     
     # WebSocket
     WEBSOCKET_ENABLED: bool = True
@@ -64,6 +65,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()

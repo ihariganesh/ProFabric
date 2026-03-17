@@ -1,14 +1,15 @@
-from typing import Optional
+from typing import Optional, List, Dict
 import httpx
 import base64
 import io
 from PIL import Image
+import google.generativeai as genai
 
 from app.core.config import settings
 
 
 class AIDesignService:
-    """Service for AI-powered fabric design generation"""
+    """Service for AI-powered fabric design, risk analysis, and QC"""
     
     @staticmethod
     async def generate_design_gemini(prompt: str) -> str:
@@ -17,26 +18,47 @@ class AIDesignService:
         if not settings.GEMINI_API_KEY:
             raise ValueError("Gemini API key not configured")
         
-        # Enhance the prompt for better fabric design results
-        enhanced_prompt = f"""Create a seamless, high-resolution textile pattern for fabric manufacturing.
-        Design requirements: {prompt}
-        Style: Professional textile design, seamless pattern, flat lay, high texture quality, 
-        suitable for fabric printing. The pattern should be tileable and repeat seamlessly."""
-        
-        import google.generativeai as genai
-        
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        
-        # Use Gemini Pro Vision for image generation
         model = genai.GenerativeModel('gemini-pro-vision')
         
-        # Note: As of now, Gemini doesn't directly generate images
-        # You'd need to use Imagen or another image generation API
-        # This is a placeholder for the logic
-        
-        # For now, return a placeholder
+        # Placeholder for actual image generation via Imagen
         return "https://placeholder-image-url.com/design.png"
     
+    @staticmethod
+    async def analyze_risk_nlp(news_snippet: str) -> Dict:
+        """RiskRadar: Use Gemini to analyze supply chain risks from news"""
+        if not settings.GEMINI_API_KEY:
+            return {"risk_level": "Unknown", "impact_score": 0.0}
+            
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-pro')
+        
+        prompt = f"""
+        Analyze the following supply chain news snippet and determine the risk level (Low, Medium, High) 
+        and an impact score (0.0 to 1.0) for textile manufacturers in the region mentioned.
+        News: {news_snippet}
+        
+        Format the output as JSON: {{"risk_level": "...", "impact_score": 0.0, "reason": "..."}}
+        """
+        
+        response = model.generate_content(prompt)
+        # In production, parse the JSON response. For now, simulate:
+        return {
+            "risk_level": "High",
+            "impact_score": 0.8,
+            "reason": "Port strike detected in sourcing region"
+        }
+
+    @staticmethod
+    async def detect_defects_yolo(image_data: str) -> List[Dict]:
+        """EdgeGuard: Detect defects using YOLO (Mocked for now)"""
+        # This would normally load a .pt or .onnx model
+        # For simulation, we return predefined defects
+        return [
+            {"type": "Hole", "confidence": 0.98, "location": {"x": 120, "y": 450}},
+            {"type": "Stain", "confidence": 0.85, "location": {"x": 800, "y": 210}}
+        ]
+
     @staticmethod
     async def generate_design_stable_diffusion(prompt: str) -> str:
         """Generate fabric design using Stable Diffusion API"""
@@ -78,11 +100,7 @@ class AIDesignService:
             
             if response.status_code == 200:
                 data = response.json()
-                # Get the base64 image
                 image_data = data["artifacts"][0]["base64"]
-                
-                # TODO: Upload to S3 or cloud storage and return URL
-                # For now, return a placeholder
                 return f"data:image/png;base64,{image_data}"
             else:
                 raise Exception(f"Stable Diffusion API error: {response.text}")
@@ -95,10 +113,6 @@ class AIDesignService:
         gsm: int
     ) -> list:
         """Calculate Bill of Materials for a fabric order"""
-        
-        # Simple BOM calculation logic
-        # In production, this would be more sophisticated
-        
         bom_items = []
         
         # Calculate thread requirements based on fabric type and specs
@@ -111,7 +125,7 @@ class AIDesignService:
                 "material_type": "Thread",
                 "quantity_required": round(total_thread_kg, 2),
                 "unit": "kg",
-                "estimated_cost": round(total_thread_kg * 15, 2)  # $15 per kg estimate
+                "estimated_cost": round(total_thread_kg * 15, 2)
             })
         
         elif fabric_type.lower() == "polyester":

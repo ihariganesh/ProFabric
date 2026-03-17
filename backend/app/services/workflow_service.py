@@ -272,9 +272,33 @@ class WorkflowService:
     
     def _trigger_milestone_payment(self, order: Order, milestone_status: OrderStatus):
         """Trigger milestone payment release"""
-        # This would integrate with payment service
-        # For now, just log the milestone
-        pass
+        from app.models.payment import Payment, PaymentStatus, PaymentType
+        
+        total_cost = order.total_cost or 0.0
+        amount_to_release = 0.0
+        payment_type = PaymentType.MILESTONE
+        
+        if milestone_status == OrderStatus.FABRIC_SOURCED:
+            amount_to_release = total_cost * 0.30
+            payment_type = PaymentType.ADVANCE
+        elif milestone_status == OrderStatus.PRINTING_COMPLETED:
+            amount_to_release = total_cost * 0.40
+        elif milestone_status == OrderStatus.DELIVERED:
+            amount_to_release = total_cost * 0.30
+            payment_type = PaymentType.FINAL
+            
+        if amount_to_release > 0:
+            payment = Payment(
+                order_id=order.order_id,
+                payer_id=order.buyer_id,
+                payee_id=order.sub_orders[0].assigned_vendor_id if order.sub_orders else None,
+                amount=amount_to_release,
+                payment_type=payment_type,
+                payment_status=PaymentStatus.PENDING,
+                currency="USD"
+            )
+            self.db.add(payment)
+            self.db.commit()
     
     def _handle_cancellation(self, order: Order):
         """Handle order cancellation - update all sub-orders"""
@@ -347,25 +371,50 @@ class WorkflowService:
         user: User,
         notes: Optional[str]
     ):
-        """Log status change for audit trail (could be separate table)"""
-        # For now, we'll store in order's JSON field or create audit log
-        pass
+        """Log status change for audit trail using Notification model as proxy"""
+        from app.models.notification import Notification
+        
+        notification = Notification(
+            user_id=user.user_id,
+            type="ORDER_STATUS_UPDATE",
+            title=f"Order #{order.order_id} status updated",
+            content=f"Status changed from {old_status.value} to {new_status.value}. {notes or ''}",
+            related_entity_type="order",
+            related_entity_id=order.order_id,
+            is_read=False
+        )
+        self.db.add(notification)
+        self.db.commit()
     
     def get_order_timeline(self, order_id: int) -> List[Dict[str, Any]]:
         """Get complete timeline of order status changes"""
-        # This would query OrderStatusHistory table
-        # For now, return current status
+        from app.models.notification import Notification
+        
         order = self.db.query(Order).filter(Order.order_id == order_id).first()
         if not order:
             return []
+            
+        notifications = self.db.query(Notification).filter(
+            Notification.related_entity_id == order_id,
+            Notification.related_entity_type == "order",
+            Notification.type == "ORDER_STATUS_UPDATE"
+        ).order_by(Notification.created_at.desc()).all()
         
-        return [
-            {
-                "status": order.status.value,
-                "timestamp": order.updated_at.isoformat() if order.updated_at else None,
-                "is_current": True
-            }
-        ]
+        timeline = []
+        for notif in notifications:
+            timeline.append({
+                "status_update": notif.content,
+                "timestamp": notif.created_at.isoformat() if notif.created_at else None,
+                "user_id": notif.user_id
+            })
+            
+        timeline.append({
+            "status_update": f"Order created with status {OrderStatus.PENDING.value}",
+            "timestamp": order.created_at.isoformat() if order.created_at else None,
+            "user_id": order.buyer_id
+        })
+        
+        return timeline
     
     def get_available_transitions(
         self, 

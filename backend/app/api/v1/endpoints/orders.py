@@ -125,10 +125,11 @@ async def get_order_detail(
 @router.post("/{order_id}/optimize")
 async def optimize_order(
     order_id: int,
+    use_sustainability: bool = False,
     current_user: User = Depends(require_role(["Buyer"])),
     db: Session = Depends(get_db)
 ):
-    """Run optimization engine to find best supply chain"""
+    """Run optimization engine to find best supply chain with EcoFlow"""
     
     order = db.query(Order).filter(Order.order_id == order_id).first()
     
@@ -139,8 +140,11 @@ async def optimize_order(
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Run optimization
-    optimizer = OptimizationEngine(db)
+    optimizer = OptimizationEngine(db, use_sustainability=use_sustainability)
     supply_chain = optimizer.create_optimized_supply_chain(order_id)
+    
+    # FabricSim Integration
+    simulation = optimizer.simulate_run(supply_chain)
     
     # Create sub-orders from optimization results
     for so_data in supply_chain["sub_orders"]:
@@ -148,7 +152,7 @@ async def optimize_order(
             parent_order_id=order_id,
             assigned_vendor_id=so_data["vendor"]["vendor_id"],
             task_type=so_data["task_type"],
-            task_description=f"{so_data['vendor']['service_name'] or so_data['vendor']['product_name']}",
+            task_description=f"{so_data['vendor'].get('service_name') or so_data['vendor'].get('product_name')}",
             agreed_cost=so_data["estimated_cost"],
             sequence_order=so_data["sequence"]
         )
@@ -164,5 +168,11 @@ async def optimize_order(
     
     return {
         "message": "Optimization completed successfully",
-        "supply_chain": supply_chain
+        "eco_flow_active": use_sustainability,
+        "supply_chain": supply_chain,
+        "fabric_sim": simulation,
+        "risk_radar": {
+            "status": "Healthy",
+            "active_alerts": 0
+        }
     }

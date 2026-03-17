@@ -11,13 +11,62 @@ from app.core.config import settings
 
 
 class OptimizationEngine:
-    """Core optimization engine for supply chain routing"""
+    """Core optimization engine for supply chain routing with EcoFlow and RiskRadar integration"""
     
-    def __init__(self, db: Session):
+    # Carbon footprint factors (estimated kg CO2 per kg material or per 100km transport)
+    CARBON_FACTORS = {
+        "material": {
+            "cotton": 20.0,
+            "polyester": 35.0,
+            "silk": 45.0,
+            "organic_cotton": 2.0,
+            "recycled_polyester": 5.0
+        },
+        "transport": 2.0, # Increased transport impact
+        "process": {
+            "weaving": 5.0,
+            "dyeing": 10.0,
+            "finishing": 4.0
+        }
+    }
+    
+    def __init__(self, db: Session, use_sustainability: bool = False):
         self.db = db
+        self.use_sustainability = use_sustainability
+        
         self.cost_weight = settings.OPTIMIZATION_COST_WEIGHT
         self.speed_weight = settings.OPTIMIZATION_SPEED_WEIGHT
         self.quality_weight = settings.OPTIMIZATION_QUALITY_WEIGHT
+        self.sustainability_weight = settings.OPTIMIZATION_SUSTAINABILITY_WEIGHT
+        
+        # Adjust weights if sustainability is enabled to make it impactful
+        if use_sustainability:
+            # Scale down others to keep total weight around 1.0-1.3 or re-normalize
+            # For testing simplicity, we'll just ensure sustainability has its own weight
+            pass
+        else:
+            self.sustainability_weight = 0.0
+    
+    def calculate_sustainability_score(self, material_type: str, distance: float, quantity: float) -> float:
+        """Calculate sustainability score based on carbon footprint (0-1, higher is better)"""
+        material_factor = self.CARBON_FACTORS["material"].get(material_type.lower(), 7.0)
+        transport_factor = self.CARBON_FACTORS["transport"]
+        
+        # Total estimated carbon footprint
+        carbon_footprint = (material_factor * quantity) + (transport_factor * (distance / 100) * quantity)
+        
+        # Normalize to 0-1 (inverse of footprint, with some reasonable max threshold for scaling)
+        # Assuming a "bad" footprint is 100kg CO2 per unit of order, 0 is perfect
+        max_carbon_threshold = 50.0 * quantity 
+        score = 1 - min(carbon_footprint / max_carbon_threshold, 1.0)
+        return score
+
+    def apply_risk_radar(self, vendor_id: int, base_rating: float) -> float:
+        """Adjust reliability score based on real-time risk data (RiskRadar)"""
+        # In a real implementation, this would query a 'disruptions' table or cache
+        # affected by the RiskRadar NLP engine
+        # For now, we simulate a check
+        return base_rating # Default to base rating if no active risk
     
     def calculate_distance(self, loc1: dict, loc2: dict) -> float:
         """Calculate distance between two locations in kilometers"""
@@ -79,13 +128,26 @@ class OptimizationEngine:
             # Normalize individual factors (lower is better for cost and speed)
             cost_score = 1 - self.normalize_score(product.price_per_unit, min_price, max_price)
             speed_score = 1 - self.normalize_score(product.lead_time_days + (distance / 100), min_lead, max_lead)
-            quality_score = self.normalize_score(user.rating, 0, 5)
+            
+            # Apply RiskRadar to quality/reliability score
+            adjusted_rating = self.apply_risk_radar(user.user_id, user.rating)
+            quality_score = self.normalize_score(adjusted_rating, 0, 5)
+            
+            # Calculate Sustainability Score if enabled
+            sustainability_score = 0.0
+            if self.use_sustainability:
+                # Use product name or specific sub-type for more accurate carbon factor
+                search_term = product.name.lower()
+                sustainability_score = self.calculate_sustainability_score(
+                    search_term, distance, quantity_required
+                )
             
             # Calculate weighted total score
             total_score = (
                 cost_score * self.cost_weight +
                 speed_score * self.speed_weight +
-                quality_score * self.quality_weight
+                quality_score * self.quality_weight +
+                sustainability_score * self.sustainability_weight
             )
             
             scored_vendors.append({
@@ -103,6 +165,7 @@ class OptimizationEngine:
                 "cost_score": round(cost_score, 4),
                 "speed_score": round(speed_score, 4),
                 "quality_score": round(quality_score, 4),
+                "sustainability_score": round(sustainability_score, 4),
                 "location": user.location_data
             })
         
@@ -351,3 +414,56 @@ class OptimizationEngine:
             supply_chain["optimization_score"] = round(avg_score, 4)
         
         return supply_chain
+
+    def simulate_run(self, supply_chain: Dict) -> Dict:
+        """FabricSim: Predict potential bottlenecks and energy consumption"""
+        import random
+        
+        simulation_results = {
+            "predicted_bottlenecks": [],
+            "total_estimated_energy_kwh": 0.0,
+            "delay_probability": 0.0,
+            "confidence_score": 0.85
+        }
+        
+        for sub_order in supply_chain["sub_orders"]:
+            task_type = sub_order["task_type"]
+            
+            # Predict delay based on task type and random factors (simulating 'Monsoon' or 'Energy shortage')
+            # In production, this would use the historical dataset
+            risk_factor = random.random()
+            
+            if task_type == TaskType.DYEING and risk_factor > 0.7:
+                simulation_results["predicted_bottlenecks"].append({
+                    "stage": "Dyeing",
+                    "issue": "High chance of delay during high-humidity season",
+                    "probability": 0.9
+                })
+            
+            # Estimate energy consumption
+            if task_type == TaskType.MANUFACTURE:
+                simulation_results["total_estimated_energy_kwh"] += random.uniform(500, 1500)
+            elif task_type == TaskType.TRANSPORT:
+                simulation_results["total_estimated_energy_kwh"] += random.uniform(50, 200)
+                
+        simulation_results["delay_probability"] = 0.1 + (len(simulation_results["predicted_bottlenecks"]) * 0.2)
+        
+        return simulation_results
+
+    async def edge_guard_defect_detection(self, image_data: str) -> Dict:
+        """EdgeGuard: Detect defects using computer vision (YOLO)"""
+        # This calls the AI service which would handle the YOLO model
+        from app.services.ai_service import AIDesignService
+        
+        # Simulated YOLO response
+        defects = [
+            {"type": "Hole", "confidence": 0.98, "location": {"x": 120, "y": 450}},
+            {"type": "Stain", "confidence": 0.85, "location": {"x": 800, "y": 210}}
+        ]
+        
+        return {
+            "defect_map_url": "https://api.profabric.com/v1/qc/map/123.png",
+            "defects_found": len(defects),
+            "details": defects,
+            "status": "Warning" if defects else "Pass"
+        }

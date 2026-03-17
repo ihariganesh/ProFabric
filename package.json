@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@testsprite/testsprite-mcp": "^0.0.23"
+    "@testsprite/testsprite-mcp": "^0.0.23",
+    "firebase-tools": "^15.10.0"
   }
 }
