@@ -45,6 +45,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _registerMcp() {
     McpBridge.instance.registerScreen("login_screen");
+    
+    _emailController.addListener(() {
+      McpBridge.instance.updateData('email', _emailController.text);
+    });
+    _passwordController.addListener(() {
+      McpBridge.instance.updateData('password', _passwordController.text);
+    });
+
     McpBridge.instance.registerWidget("email_input", (val) {
       _emailController.text = val;
     });

@@ -374,9 +374,10 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 onChanged: (val) async {
                   setState(() => _notifications = val);
                   await _settings.setNotifications(val);
-                  if (mounted)
+                  if (mounted) {
                     _showSnack(
                         val ? 'Order alerts enabled' : 'Order alerts disabled');
+                  }
                 },
               ),
               _divider(),
@@ -389,10 +390,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 onChanged: (val) async {
                   setState(() => _notifications = val);
                   await _settings.setNotifications(val);
-                  if (mounted)
+                  if (mounted) {
                     _showSnack(val
                         ? 'Vendor alerts enabled'
                         : 'Vendor alerts disabled');
+                  }
                 },
               ),
             ]),

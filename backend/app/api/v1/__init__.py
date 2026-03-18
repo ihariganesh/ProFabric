@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, orders, ai, optimize, tracking, users, products, payments, workflow, chat
+from app.api.v1.endpoints import auth, orders, ai, optimize, tracking, users, products, payments, workflow, chat, mcp
 
 api_router = APIRouter()
 
@@ -15,3 +15,6 @@ api_router.include_router(optimize.router, prefix="/optimize", tags=["Optimizati
 api_router.include_router(tracking.router, prefix="/tracking", tags=["Real-Time Tracking"])
 api_router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 api_router.include_router(chat.router, prefix="", tags=["Chat"])
+api_router.include_router(mcp.router, prefix="/mcp", tags=["MCP"])
+from app.api.v1.endpoints import ai_services
+api_router.include_router(ai_services.router, prefix="/ai-services", tags=["AI Engine"])

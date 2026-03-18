@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 /// Represents a collaboration request from buyer → textile vendor.
 class CollabRequest {

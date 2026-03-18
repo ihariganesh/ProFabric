@@ -120,9 +120,9 @@ class _BuyerMarketplaceScreenState extends State<BuyerMarketplaceScreen> {
             SliverToBoxAdapter(child: _categories()),
             SliverToBoxAdapter(child: _featuredBanner()),
             if (_isLoading)
-              SliverToBoxAdapter(
+              const SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 60),
+                  padding: EdgeInsets.symmetric(vertical: 60),
                   child: Center(
                     child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
                   ),

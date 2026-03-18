@@ -390,9 +390,9 @@ class _AIDesignScreenState extends State<AIDesignScreen>
                 // 3D render label
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF111D22),
-                    borderRadius: const BorderRadius.vertical(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF111D22),
+                    borderRadius: BorderRadius.vertical(
                         bottom: Radius.circular(20)),
                   ),
                   child: Row(
@@ -422,13 +422,13 @@ class _AIDesignScreenState extends State<AIDesignScreen>
                               const Color(0xFF00C896).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified_rounded,
+                            Icon(Icons.verified_rounded,
                                 color: Color(0xFF00C896), size: 14),
-                            const SizedBox(width: 4),
-                            const Text('HD Render',
+                            SizedBox(width: 4),
+                            Text('HD Render',
                                 style: TextStyle(
                                     color: Color(0xFF00C896),
                                     fontSize: 11,

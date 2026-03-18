@@ -48,8 +48,9 @@ class AuthService {
     } catch (e) {
       // Android API 36: Pigeon deserialization bug — auth succeeds but Dart layer throws
       if (_isPigeonError(e)) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('PigeonUserDetails bug on signIn — checking auth state...');
+        }
         if (await _waitForFirebaseAuth()) return null;
         throw 'Sign-in failed. Please try again.';
       }
@@ -82,8 +83,9 @@ class AuthService {
     } catch (e) {
       // Android API 36: Pigeon deserialization bug — account created but Dart layer throws
       if (_isPigeonError(e)) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('PigeonUserDetails bug on signUp — checking auth state...');
+        }
         if (await _waitForFirebaseAuth()) {
           try {
             await _firebaseAuth!.currentUser?.updateDisplayName(displayName);

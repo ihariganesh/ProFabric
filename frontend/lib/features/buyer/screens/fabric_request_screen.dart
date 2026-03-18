@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:palette_generator/palette_generator.dart';

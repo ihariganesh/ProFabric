@@ -15,7 +15,7 @@ class McpBridge {
 
   Timer? _pollTimer;
   // Default bounds for Android/Desktop etc. User can override to 10.0.2.2 on Android emulator
-  String baseUrl = 'http://127.0.0.1:8000';
+  String baseUrl = 'http://10.0.2.2:8000'; // Default for Android Emulator
 
   void registerScreen(String screenName) {
     currentScreen = screenName;
@@ -64,12 +64,17 @@ class McpBridge {
         "data": data,
         "errors": errors,
       };
-      await http.post(
-        Uri.parse('$baseUrl/app/state'),
+      
+      final url = Uri.parse('$baseUrl/app/state');
+      debugPrint('MCP Bridge pushing to: $url');
+      final r = await http.post(
+        url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(state),
       );
+      debugPrint('MCP Bridge push Response: ${r.statusCode}');
     } catch (e) {
+      debugPrint('MCP Bridge Error: $e');
       // Ignored for resilience when MCP server is not running
     }
   }
@@ -78,10 +83,11 @@ class McpBridge {
     try {
       final response = await http.get(Uri.parse('$baseUrl/app/action'));
       if (response.statusCode == 200) {
-        final Map<String, dynamic> actionData = jsonDecode(response.body);
-        if (actionData['action'] != null) {
-          final target = actionData['action']['target'];
-          final value = actionData['action']['value'] ?? '';
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['action'] != null) {
+          final action = responseData['action'];
+          final target = action['target'];
+          final value = action['value'] ?? '';
           if (actionHandlers.containsKey(target)) {
             debugPrint("MCP Executing Action on Widget: $target");
             actionHandlers[target]!(value);

@@ -165,12 +165,12 @@ class _BuyerOrderTrackingScreenState extends State<BuyerOrderTrackingScreen> {
       ),
       child: Column(
         children: [
-          Row(
+          const Row(
             children: [
-              const Text('Overall Progress',
+              Text('Overall Progress',
                   style: TextStyle(color: Colors.white70, fontSize: 14)),
-              const Spacer(),
-              const Text('57%',
+              Spacer(),
+              Text('57%',
                   style: TextStyle(
                       color: Color(0xFF6C63FF),
                       fontSize: 24,

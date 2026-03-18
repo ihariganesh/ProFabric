@@ -41,8 +41,9 @@ class _VendorSelectionScreenState extends State<VendorSelectionScreen> {
         }
 
         int qualityScore = 85;
-        if (user['productQuality'] == 'Premium') qualityScore = 95;
-        else if (user['productQuality'] == 'High') qualityScore = 90;
+        if (user['productQuality'] == 'Premium') {
+          qualityScore = 95;
+        } else if (user['productQuality'] == 'High') qualityScore = 90;
         
         final uid = user['uid']?.toString() ?? '';
         final randomOffset = uid.isNotEmpty ? uid.codeUnitAt(0) : 0;

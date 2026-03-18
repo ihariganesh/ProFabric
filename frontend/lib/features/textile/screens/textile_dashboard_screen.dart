@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/constants/user_roles.dart';
 import '../../../core/services/auth_service.dart';
@@ -23,6 +24,7 @@ class TextileDashboardScreen extends StatefulWidget {
 class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late StreamSubscription _notifSub;
   int _navIndex = 0;
   bool _isLoading = true;
   bool _isProfileComplete = true;
@@ -41,6 +43,9 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    _notifSub = CollabRequestService.instance.notificationStream.listen((_) {
+      if (mounted) setState(() {});
+    });
     _checkProfileStatus();
   }
 
@@ -66,6 +71,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
 
   @override
   void dispose() {
+    _notifSub.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -204,7 +210,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
           ),
           Switch(
             value: _useEcoFlow,
-            activeColor: _kGreen,
+            activeThumbColor: _kGreen,
             onChanged: (v) => setState(() => _useEcoFlow = v),
           ),
         ],
@@ -292,7 +298,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
           ),
           _iconBtn(Icons.notifications_outlined, () {
             Navigator.pushNamed(context, '/notifications');
-          }, badge: true),
+          }, badge: CollabRequestService.instance.unreadCount > 0),
           const SizedBox(width: 4),
           _iconBtn(Icons.chat_bubble_outline_rounded, () {
             Navigator.pushNamed(context, '/chat-list',
@@ -760,7 +766,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
       ('Quality Check', const Color(0xFF374151), req.productionProgress >= 1.00),
     ];
 
-    void _advanceProgress() {
+    void advanceProgress() {
       double newProg = req.productionProgress + 0.25;
       if (newProg > 1.0) newProg = 1.0;
       
@@ -855,7 +861,7 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
               )),
           const SizedBox(height: 12),
           Center(
-            child: _solidBtn('Advance Stage', _kBlue, _advanceProgress),
+            child: _solidBtn('Advance Stage', _kBlue, advanceProgress),
           ),
         ],
       ),
@@ -1172,47 +1178,68 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: _kCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(
-            top: BorderSide(color: _kBorder),
-            left: BorderSide(color: _kBorder),
-            right: BorderSide(color: _kBorder),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: _kBorder, borderRadius: BorderRadius.circular(2))),
+      builder: (_) => Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: _kCard,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(color: _kBorder),
+              left: BorderSide(color: _kBorder),
+              right: BorderSide(color: _kBorder),
             ),
-            const SizedBox(height: 20),
-            _sheetTile(Icons.person_outline_rounded, 'Profile Settings',
-                () => Navigator.pop(context)),
-            _sheetTile(Icons.settings_outlined, 'App Settings', () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/settings');
-            }),
-            _sheetTile(Icons.help_outline_rounded, 'Help & Support',
-                () => Navigator.pop(context)),
-            const Divider(color: _kBorder),
-            _sheetTile(Icons.logout_rounded, 'Sign Out', () async {
-              Navigator.pop(context);
-              await AuthService().signOut();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                    context, '/login', (_) => false);
-              }
-            }, color: const Color(0xFFEF4444)),
-            const SizedBox(height: 12),
-          ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: _kBorder, borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 20),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.person_outline_rounded, 'Profile Settings',
+                    () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/profile-settings');
+                }),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.settings_outlined, 'App Settings', () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/app-settings');
+                }),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.help_outline_rounded, 'Help & Support',
+                    () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/help-support');
+                }),
+              ),
+              const Divider(color: _kBorder),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.logout_rounded, 'Sign Out', () async {
+                  Navigator.pop(context);
+                  await AuthService().signOut();
+                  if (mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                        context, '/login', (_) => false);
+                  }
+                }, color: const Color(0xFFEF4444)),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -1246,45 +1273,60 @@ class _TextileDashboardScreenState extends State<TextileDashboardScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: _kCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(
-            top: BorderSide(color: _kBorder),
-            left: BorderSide(color: _kBorder),
-            right: BorderSide(color: _kBorder),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: _kBorder, borderRadius: BorderRadius.circular(2))),
+      builder: (_) => Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: _kCard,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(color: _kBorder),
+              left: BorderSide(color: _kBorder),
+              right: BorderSide(color: _kBorder),
             ),
-            const SizedBox(height: 20),
-            const Text('Quick Actions',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            _sheetTile(Icons.add_shopping_cart_rounded, 'Create Order',
-                () => Navigator.pop(context)),
-            _sheetTile(Icons.person_add_outlined, 'Add Vendor',
-                () => Navigator.pop(context)),
-            _sheetTile(Icons.assignment_outlined, 'Assign Sub-Order',
-                () => Navigator.pop(context)),
-            _sheetTile(Icons.chat_outlined, 'Message Buyer',
-                () => Navigator.pop(context)),
-            const SizedBox(height: 12),
-          ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: _kBorder, borderRadius: BorderRadius.circular(2))),
+              ),
+              const SizedBox(height: 20),
+              const Text('Quick Actions',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.add_shopping_cart_rounded, 'Create Order',
+                    () => Navigator.pop(context)),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.person_add_outlined, 'Add Vendor',
+                    () => Navigator.pop(context)),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.assignment_outlined, 'Assign Sub-Order',
+                    () => Navigator.pop(context)),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: _sheetTile(Icons.chat_outlined, 'Message Buyer',
+                    () => Navigator.pop(context)),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

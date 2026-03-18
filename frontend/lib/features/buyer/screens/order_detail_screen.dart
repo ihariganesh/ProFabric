@@ -54,11 +54,11 @@ class OrderDetailScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Overall Progress', style: TextStyle(color: Colors.white70, fontSize: 13)),
-              const Text('65%', style: TextStyle(color: Colors.blue, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('Overall Progress', style: TextStyle(color: Colors.white70, fontSize: 13)),
+              Text('65%', style: TextStyle(color: Colors.blue, fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),

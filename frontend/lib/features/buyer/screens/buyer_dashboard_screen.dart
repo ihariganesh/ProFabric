@@ -613,15 +613,15 @@ class _BuyerDashboardScreenState extends State<BuyerDashboardScreen> {
       padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
       child: Column(
         children: [
-          Row(
+          const Row(
             children: [
-              const Text('Active Orders',
+              Text('Active Orders',
                   style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w700)),
-              const Spacer(),
-              const Text('View All',
+              Spacer(),
+              Text('View All',
                   style: TextStyle(color: Color(0xFF3F8CFF), fontSize: 13)),
             ],
           ),

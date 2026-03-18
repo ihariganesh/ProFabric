@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/mcp_bridge.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,12 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    McpBridge.instance.registerScreen('home_screen');
+    McpBridge.instance.registerWidget('logout_button', (val) async {
+      await _authService.signOut();
+      if (mounted) Navigator.pushReplacementNamed(context, '/login');
+    });
+    
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       setState(() {
