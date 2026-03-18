@@ -84,8 +84,23 @@ class WorkflowEngine:
     @staticmethod
     async def _trigger_side_effects(new_state: OrderState, context: Dict[str, Any]):
         """
-        Fire events for AI evaluation or notifications based on state entered.
+        Fire events for AI evaluation, notifications, and Real-Time DB WebSockets.
         """
+        # Broadcast the new state to all clients listening to this order
+        order_id = context.get("order_id")
+        if order_id:
+            from app.core.websockets.connection_manager import manager
+            import datetime
+            await manager.broadcast_to_topic(
+                topic=f"order_{order_id}",
+                message={
+                    "event": "STATE_UPDATE",
+                    "order_id": order_id,
+                    "new_state": new_state.value,
+                    "timestamp": datetime.datetime.utcnow().isoformat()
+                }
+            )
+
         if new_state == OrderState.SAMPLE_REQUESTED:
             # Trigger FabricSim prediction & RiskRadar
             pass

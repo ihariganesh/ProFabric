@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../ai_widgets/ecoflow_toggle.dart';
 import '../../ai_widgets/fabricsim_dialog.dart';
+import 'order_timeline_stepper.dart';
 
 class BuyerDashboard extends StatefulWidget {
   const BuyerDashboard({Key? key}) : super(key: key);
@@ -78,7 +79,13 @@ class _BuyerDashboardState extends State<BuyerDashboard> {
             "Active Orders Tracker",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          // Here would be your Stepper UI syncing with the backend WS order events...
+          const SizedBox(height: 10),
+          const Card(
+            child: OrderTimelineStepper(
+              orderId: "10042",
+              initialState: "CREATED",
+            ),
+          )
         ],
       ),
     );

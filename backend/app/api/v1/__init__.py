@@ -18,3 +18,5 @@ api_router.include_router(chat.router, prefix="", tags=["Chat"])
 api_router.include_router(mcp.router, prefix="/mcp", tags=["MCP"])
 from app.api.v1.endpoints import ai_services
 api_router.include_router(ai_services.router, prefix="/ai-services", tags=["AI Engine"])
+from app.api.v1.endpoints import ws_tracking
+api_router.include_router(ws_tracking.router, tags=["WebSockets"])
